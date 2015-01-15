@@ -123,7 +123,74 @@ static void * _thread(void *data) {
 	//TODO Rimanere in attesa di comunicazioni in entrata
 	g_free(sdp);
 
-	end: g_object_unref(agent);
+	/*
+	uso per prova per leggere key64 dell'altro peer
+	*/
+	// Listen on stdin for the remote candidate list
+	printf("Enter remote data (single line, no wrapping):\n");
+	printf("> ");
+	fflush (stdout);
+	while (!exit_thread) {
+		GIOStatus s = g_io_channel_read_line (io_stdin, &line, NULL, NULL, NULL);
+		if (s == G_IO_STATUS_NORMAL) {
+			gsize sdp_len;
+			sdp = (gchar *) g_base64_decode (line, &sdp_len);
+			// Parse remote candidate list and set it on the agent
+			if (sdp && nice_agent_parse_remote_sdp (agent, sdp) > 0) {
+				g_free (sdp);
+				g_free (line);
+				break;
+			} else {
+				fprintf(stderr, "ERROR: failed to parse remote data\n");
+				printf("Enter remote data (single line, no wrapping):\n");
+				printf("> ");
+				fflush (stdout);
+			}
+			g_free (sdp);
+			g_free (line);
+		} else if (s == G_IO_STATUS_AGAIN) {
+			usleep (100000);
+		}
+	}
+	/**aspetta per arrivo segnale**/
+	g_debug("waiting for state READY or FAILED signal...");
+	g_mutex_lock(&negotiate_mutex);
+	while (!exit_thread && !negotiation_done)
+		g_cond_wait(&negotiate_cond, &negotiate_mutex);
+	g_mutex_unlock(&negotiate_mutex);
+	if (exit_thread)
+		goto end;
+
+
+	/** Invio dati all'altro client**/
+	// Listen to stdin and send data written to it
+	printf("\nSend lines to remote (Ctrl-D to quit):\n");
+	printf("> ");
+	fflush (stdout);
+	while (!exit_thread) {
+		GIOStatus s = g_io_channel_read_line (io_stdin, &line, NULL, NULL, NULL);
+
+		if (s == G_IO_STATUS_NORMAL) {
+			nice_agent_send(agent, stream_id, 1, strlen(line), line);
+			g_free (line);
+			printf("> ");
+			fflush (stdout);
+		} else if (s == G_IO_STATUS_AGAIN) {
+			usleep (100000);
+		} else {
+			// Ctrl-D was pressed.
+			nice_agent_send(agent, stream_id, 1, 1, "\0");
+			break;
+		}
+	}
+
+
+
+
+
+	end:
+	fprintf(stderr,"Fine.");
+	g_object_unref(agent);
 	g_io_channel_unref(io_stdin);
 	g_main_loop_quit(gloop);
 

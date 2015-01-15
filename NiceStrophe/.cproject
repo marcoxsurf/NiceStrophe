@@ -90,7 +90,7 @@
 					</externalSetting>
 				</externalSettings>
 			</storageModule>
-			<storageModule adwaita-icon-theme="false" cairo-egl="false" cairo-gobject="false" cairo-ps="false" cairo-xcb="false" cecil="false" dbus-1="false" dotnet="false" gdk-pixbuf-2.0="false" gdk-pixbuf-xlib-2.0="false" gdk-x11-3.0="false" gio-2.0="true" gio-unix-2.0="false" gl="false" glib-2.0="true" gmodule-2.0="false" gmodule-no-export-2.0="false" harfbuzz-icu="false" input-pad="false" libart-2.0="false" libdrm="false" libdrm_nouveau="false" libosip2="false" libpcrecpp="false" libpng16="false" menu="false" menu6="false" menuw6="false" moduleId="packages" mono-cairo="false" ncursesplusplusw6="false" nice="true" opencdk="false" panelw="false" panelw6="false" pango="false" pangoft2="false" pyzy-1.0="false" randrproto="false" system.web.extensions.design_1.0="false" udev="false" uuid="false" wayland-client="false" wayland-server="false" wcf="false" xau="false" xcb-composite="false" xcb-damage="false" xcb-xevie="false" xcb-xvmc="false" xinerama="false" xproto="false" xrender="false" xshmfence="false" yast2-devtools="false" zlib="false"/>
+			<storageModule adwaita-icon-theme="false" alsa="false" cairo-egl="false" cairo-gobject="false" cairo-ps="false" cairo-xcb="false" cecil="false" dbus-1="false" dotnet="false" gdk-pixbuf-2.0="false" gdk-pixbuf-xlib-2.0="false" gdk-x11-3.0="false" gio-2.0="true" gio-unix-2.0="false" gl="false" glib-2.0="true" gmodule-2.0="false" gmodule-no-export-2.0="false" harfbuzz-icu="false" input-pad="false" libart-2.0="false" libdrm="false" libdrm_nouveau="false" libosip2="false" libpcrecpp="false" libpng16="false" libstrophe="false" mediastreamer="false" menu="false" menu6="false" menuw6="false" moduleId="packages" mono-cairo="false" ncursesplusplusw6="false" nice="true" opencdk="false" panelw="false" panelw6="false" pango="false" pangoft2="false" pyzy-1.0="false" randrproto="false" speex="false" speexdsp="false" system.web.extensions.design_1.0="false" udev="false" uuid="false" wayland-client="false" wayland-server="false" wcf="false" xau="false" xcb-composite="false" xcb-damage="false" xcb-xevie="false" xcb-xvmc="false" xinerama="false" xproto="false" xrender="false" xshmfence="false" yast2-devtools="false" zlib="false"/>
 		</cconfiguration>
 		<cconfiguration id="cdt.managedbuild.config.gnu.exe.release.437328984">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.exe.release.437328984" moduleId="org.eclipse.cdt.core.settings" name="Release">
@@ -153,5 +153,12 @@
 		</scannerConfigBuildInfo>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
-	<storageModule moduleId="refreshScope"/>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Debug">
+			<resource resourceType="PROJECT" workspacePath="/NiceStrophe"/>
+		</configuration>
+		<configuration configurationName="Release">
+			<resource resourceType="PROJECT" workspacePath="/NiceStrophe"/>
+		</configuration>
+	</storageModule>
 </cproject>
