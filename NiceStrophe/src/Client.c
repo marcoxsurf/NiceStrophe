@@ -12,7 +12,7 @@
 static GMainLoop *gloop;
 static gchar *stun_addr = NULL;
 static guint stun_port;
-//static gboolean controlling;
+static gboolean controlling;
 static gboolean exit_thread, candidate_gathering_done, negotiation_done;
 static GMutex gather_mutex, negotiate_mutex;
 static GCond gather_cond, negotiate_cond;
@@ -34,6 +34,11 @@ int main(int argc, char *argv[]) {
 	GThread *gthread;
 	char *def_stun_server = "stun.l.google.com";
 	char *def_stun_port = "19302", *port_err = NULL;
+	controlling = argv[1][0] - '0';
+	  if (controlling != 0 && controlling != 1) {
+	    fprintf(stderr, "Usage: %s 0|1 \n", argv[0]);
+	    return EXIT_FAILURE;
+	  }
 	//risolvo indirizzo ip dell'url del server
 	//TODO stun_addr può essere pensato come una lista di indirizzi IP
 	stun_addr = hostname_to_ip(def_stun_server, def_stun_port);
@@ -83,7 +88,7 @@ static void * _thread(void *data) {
 		g_object_set(agent, "stun-server", stun_addr, NULL);
 		g_object_set(agent, "stun-server-port", stun_port, NULL);
 	}
-	//g_object_set(agent, "controlling-mode", controlling, NULL);
+	g_object_set(agent, "controlling-mode", controlling, NULL);
 	//Connessione ai segnali
 	g_signal_connect(agent, "candidate-gathering-done",
 			G_CALLBACK(cb_candidate_gathering_done), NULL);
