@@ -32,8 +32,8 @@ static void * _thread(void *data);
 
 int main(int argc, char *argv[]) {
 	GThread *gthread;
-	char *def_stun_server = "stun.l.google.com";
-	char *def_stun_port = "19302", *port_err = NULL;
+	char *def_stun_server = "stun.stunprotocol.org";
+	char *def_stun_port = "3478", *port_err = NULL;
 	controlling = argv[1][0] - '0';
 	  if (controlling != 0 && controlling != 1) {
 	    fprintf(stderr, "Usage: %s 0|1 \n", argv[0]);
@@ -137,6 +137,7 @@ static void * _thread(void *data) {
 	fflush (stdout);
 	while (!exit_thread) {
 		GIOStatus s = g_io_channel_read_line (io_stdin, &line, NULL, NULL, NULL);
+		//printf("Channel Status: %s",s);
 		if (s == G_IO_STATUS_NORMAL) {
 			gsize sdp_len;
 			sdp = (gchar *) g_base64_decode (line, &sdp_len);
