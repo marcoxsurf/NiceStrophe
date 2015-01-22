@@ -28,10 +28,16 @@ static void cb_component_state_changed(NiceAgent *agent, guint stream_id,
 		guint component_id, guint state, gpointer data);
 static void cb_nice_recv(NiceAgent *agent, guint stream_id, guint component_id,
 		guint len, gchar *buf, gpointer data);
-static void * _thread(void *data);
+static void * _thread_nice(void *data);
+static void * _thread_xmpp(void *data);
 
 int main(int argc, char *argv[]) {
-	GThread *gthread;
+	GThread *gthread_nice;
+	GThread *gthread_xmpp;
+	/**
+	 * Importante scegliere il server STUN corretto.
+	 * Uno errato può far chiudere la connessione in modo anticipato
+	**/
 	char *def_stun_server = "stun.stunprotocol.org";
 	char *def_stun_port = "3478", *port_err = NULL;
 	controlling = argv[1][0] - '0';
@@ -57,17 +63,21 @@ int main(int argc, char *argv[]) {
 	gloop = g_main_loop_new(NULL, FALSE);
 	//Eseguo il main_loop e il thread
 	exit_thread = FALSE;
-	gthread = g_thread_new("_thread", &_thread, NULL);
+	gthread_nice = g_thread_new("_thread_nice", &_thread_nice, NULL);
+	gthread_xmpp = g_thread_new("_thread_xmpp", &_thread_xmpp,NULL);
 	//esegue il loop fino a che non viene chiamato g_main_loop_quit
 	g_main_loop_run(gloop);
 	exit_thread = TRUE;
 	//aspetto che termini
-	g_thread_join(gthread);
+	g_thread_join(gthread_nice);
+	g_thread_join(gthread_xmpp);
 	g_main_loop_unref(gloop);
 	return EXIT_SUCCESS;
 }
-
-static void * _thread(void *data) {
+/**
+ * Thread per la gestione delle connessioni 'Nice'
+ */
+static void * _thread_nice(void *data) {
 	NiceAgent *agent;
 	GIOChannel* io_stdin;
 	guint stream_id;
@@ -195,13 +205,11 @@ static void * _thread(void *data) {
 
 
 	end:
-	fprintf(stderr,"Fine.");
+	fprintf(stderr,"Fine Thread Nice");
 	g_object_unref(agent);
 	g_io_channel_unref(io_stdin);
 	g_main_loop_quit(gloop);
-
 	return NULL;
-
 }
 
 static void cb_candidate_gathering_done(NiceAgent *agent, guint stream_id,
@@ -236,3 +244,6 @@ static void cb_nice_recv(NiceAgent *agent, guint stream_id, guint component_id,
 	fflush(stdout);
 }
 
+static void * _thread_xmpp(void *data) {
+
+}
