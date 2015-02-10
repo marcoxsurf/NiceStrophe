@@ -5,6 +5,7 @@
  *      Author: marco
  */
 #include "tools.h"
+#include "header.h"
 
 gchar* hostname_to_ip(char *hostname,char *port){
 	struct addrinfo hints, *res, *res0;

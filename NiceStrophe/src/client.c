@@ -7,7 +7,20 @@
  Description : Codice client della connessione P2P con SDP (session description protocol)
  ============================================================================
  */
-#include "header.h"
+#include <stdio.h> //printf
+#include <string.h> //memset
+#include <stdlib.h> //for exit(0);
+
+#include <sys/socket.h>
+#include <errno.h> //For errno - the error number
+#include <netdb.h> //hostent
+#include <arpa/inet.h>
+
+#include <ctype.h>
+#include <unistd.h>
+#include <agent.h>
+
+#include "client.h"
 
 static GMainLoop *gloop;
 static gchar *stun_addr = NULL;
@@ -21,15 +34,6 @@ static const gchar *state_name[] = { "disconnected", "gathering", "connecting",
 		"connected", "ready", "failed" };
 //static const char DEF_STUN_SERVER[] = "stun.l.google.com";
 //static const char DEF_STUN_PORT[] = "19302";
-
-static void cb_candidate_gathering_done(NiceAgent *agent, guint stream_id,
-		gpointer data);
-static void cb_component_state_changed(NiceAgent *agent, guint stream_id,
-		guint component_id, guint state, gpointer data);
-static void cb_nice_recv(NiceAgent *agent, guint stream_id, guint component_id,
-		guint len, gchar *buf, gpointer data);
-static void * _thread_nice(void *data);
-static void * _thread_xmpp(void *data);
 
 int main(int argc, char *argv[]) {
 	GThread *gthread_nice;
@@ -199,11 +203,6 @@ static void * _thread_nice(void *data) {
 			break;
 		}
 	}
-
-
-
-
-
 	end:
 	fprintf(stderr,"Fine Thread Nice");
 	g_object_unref(agent);
