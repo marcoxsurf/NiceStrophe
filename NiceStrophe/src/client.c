@@ -23,7 +23,7 @@ static const gchar *state_name[] = { "disconnected", "gathering", "connecting",
 //static const char DEF_STUN_SERVER[] = "stun.l.google.com";
 //static const char DEF_STUN_PORT[] = "19302";
 
-int main(int argc, char *argv[]) {
+int my_main() {
 	GThread *gthread_nice;
 	GThread *gthread_xmpp;
 	/**
@@ -32,9 +32,9 @@ int main(int argc, char *argv[]) {
 	**/
 	char *def_stun_server = "stun.stunprotocol.org";
 	char *def_stun_port = "3478", *port_err = NULL;
-	controlling = argv[1][0] - '0';
+	controlling = 1; //argv[1][0] - '0';
 	  if (controlling != 0 && controlling != 1) {
-	    fprintf(stderr, "Usage: %s 0|1 \n", argv[0]);
+//	    fprintf(stderr, "Usage: %s 0|1 \n", argv[0]);
 	    return EXIT_FAILURE;
 	  }
 	//risolvo indirizzo ip dell'url del server
