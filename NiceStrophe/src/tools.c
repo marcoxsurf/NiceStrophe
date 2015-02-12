@@ -5,16 +5,25 @@
  *      Author: marco
  */
 #include "tools.h"
+#include <stdio.h> //printf
+#include <string.h> //memset
+#include <stdlib.h> //for exit(0);
 
 
-gchar* hostname_to_ip(char *hostname, char *port) {
+#include <sys/socket.h>
+#include <err.h>
+#include <errno.h> //For errno - the error number
+#include <netdb.h> //hostent
+#include <arpa/inet.h>
+
+char* hostname_to_ip(char *hostname, char *port) {
 	struct addrinfo hints, *res, *res0;
 	int error;
 	int s;
 	const char *cause = NULL;
 	int index = 0;
 	struct sockaddr_in *h;
-	gchar *ip = malloc(sizeof(gchar) * 100);
+	char *ip = malloc(sizeof(char) * 100);
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = PF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;

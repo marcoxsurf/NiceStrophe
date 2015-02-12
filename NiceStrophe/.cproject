@@ -31,21 +31,22 @@
 								<option id="gnu.c.compiler.option.include.paths.976872518" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="/usr/include/glib-2.0"/>
 									<listOptionValue builtIn="false" value="/usr/lib64/glib-2.0/include"/>
-									<listOptionValue builtIn="false" value="/usr/local/include/nice"/>
 									<listOptionValue builtIn="false" value="/usr/local/include"/>
+									<listOptionValue builtIn="false" value="/usr/local/include/nice"/>
+									<listOptionValue builtIn="false" value="/usr/include/readline"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1716298909" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.194268292" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug">
 								<option id="gnu.c.link.option.libs.1126022233" name="Libraries (-l)" superClass="gnu.c.link.option.libs" valueType="libs">
-									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="gio-2.0"/>
-									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="gobject-2.0"/>
-									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="glib-2.0"/>
-									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="nice"/>
-									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="gio-2.0"/>
-									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="gobject-2.0"/>
-									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="glib-2.0"/>
-									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="nice"/>
+									<listOptionValue builtIn="false" value="gio-2.0"/>
+									<listOptionValue builtIn="false" value="gobject-2.0"/>
+									<listOptionValue builtIn="false" value="glib-2.0"/>
+									<listOptionValue builtIn="false" value="strophe"/>
+									<listOptionValue builtIn="false" value="lua"/>
+									<listOptionValue builtIn="false" value="m"/>
+									<listOptionValue builtIn="false" value="nice"/>
+									<listOptionValue builtIn="false" value="readline"/>
 								</option>
 								<option id="gnu.c.link.option.paths.1374327568" name="Library search path (-L)" superClass="gnu.c.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="../"/>
@@ -80,17 +81,20 @@
 						<entry flags="UNDEFINED" kind="libraryFile" name="gio-2.0" srcPrefixMapping="" srcRootPath=""/>
 						<entry flags="UNDEFINED" kind="libraryFile" name="gobject-2.0" srcPrefixMapping="" srcRootPath=""/>
 						<entry flags="UNDEFINED" kind="libraryFile" name="glib-2.0" srcPrefixMapping="" srcRootPath=""/>
+						<entry flags="UNDEFINED" kind="libraryFile" name="strophe" srcPrefixMapping="" srcRootPath=""/>
+						<entry flags="UNDEFINED" kind="libraryFile" name="lua" srcPrefixMapping="" srcRootPath=""/>
+						<entry flags="UNDEFINED" kind="libraryFile" name="m" srcPrefixMapping="" srcRootPath=""/>
 						<entry flags="UNDEFINED" kind="libraryFile" name="nice" srcPrefixMapping="" srcRootPath=""/>
 					</externalSetting>
 					<externalSetting contentTypes="org.eclipse.cdt.core.cSource:org.eclipse.cdt.core.cxxSource">
 						<entry flags="BUILTIN" kind="includePath" name="/usr/include/glib-2.0"/>
 						<entry flags="BUILTIN" kind="includePath" name="/usr/lib64/glib-2.0/include"/>
-						<entry flags="BUILTIN" kind="includePath" name="/usr/local/include/nice"/>
 						<entry flags="BUILTIN" kind="includePath" name="/usr/local/include"/>
+						<entry flags="BUILTIN" kind="includePath" name="/usr/local/include/nice"/>
 					</externalSetting>
 				</externalSettings>
 			</storageModule>
-			<storageModule adwaita-icon-theme="false" alsa="false" cairo-egl="false" cairo-gobject="false" cairo-ps="false" cairo-xcb="false" cecil="false" dbus-1="false" dotnet="false" gdk-pixbuf-2.0="false" gdk-pixbuf-xlib-2.0="false" gdk-x11-3.0="false" gio-2.0="true" gio-unix-2.0="false" gl="false" glib-2.0="true" gmodule-2.0="false" gmodule-no-export-2.0="false" harfbuzz-icu="false" input-pad="false" libart-2.0="false" libdrm="false" libdrm_nouveau="false" libosip2="false" libpcrecpp="false" libpng16="false" libstrophe="false" mediastreamer="false" menu="false" menu6="false" menuw6="false" moduleId="packages" mono-cairo="false" ncursesplusplusw6="false" nice="true" opencdk="false" panelw="false" panelw6="false" pango="false" pangoft2="false" pyzy-1.0="false" randrproto="false" speex="false" speexdsp="false" system.web.extensions.design_1.0="false" udev="false" uuid="false" wayland-client="false" wayland-server="false" wcf="false" xau="false" xcb-composite="false" xcb-damage="false" xcb-xevie="false" xcb-xvmc="false" xinerama="false" xproto="false" xrender="false" xshmfence="false" yast2-devtools="false" zlib="false"/>
+			<storageModule adwaita-icon-theme="false" alsa="false" cairo-egl="false" cairo-gobject="false" cairo-ps="false" cairo-xcb="false" cecil="false" dbus-1="false" dotnet="false" gdk-pixbuf-2.0="false" gdk-pixbuf-xlib-2.0="false" gdk-x11-3.0="false" gio-2.0="true" gio-unix-2.0="false" gl="false" glib-2.0="true" gmodule-2.0="false" gmodule-no-export-2.0="false" harfbuzz-icu="false" input-pad="false" libart-2.0="false" libdrm="false" libdrm_nouveau="false" libosip2="false" libpcrecpp="false" libpng16="false" libstrophe="true" lua="true" mediastreamer="false" menu="false" menu6="false" menuw6="false" moduleId="packages" mono-cairo="false" ncursesplusplusw6="false" nice="true" opencdk="false" panelw="false" panelw6="false" pango="false" pangoft2="false" pyzy-1.0="false" randrproto="false" speex="false" speexdsp="false" system.web.extensions.design_1.0="false" udev="false" uuid="false" wayland-client="false" wayland-server="false" wcf="false" xau="false" xcb-composite="false" xcb-damage="false" xcb-xevie="false" xcb-xvmc="false" xinerama="false" xproto="false" xrender="false" xshmfence="false" yast2-devtools="false" zlib="false"/>
 		</cconfiguration>
 		<cconfiguration id="cdt.managedbuild.config.gnu.exe.release.437328984">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.exe.release.437328984" moduleId="org.eclipse.cdt.core.settings" name="Release">
