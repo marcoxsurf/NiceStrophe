@@ -151,13 +151,6 @@ int handle_nice(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza,
 		return 1;
 	}
 	io_notification("RECV: %s from jid: %s",getActionName(act),from);
-	//if not idle send back "denied"
-	//remove lock from sender in case of waiting for status
-	if(_nice_status!=NICE_ST_IDLE){
-		net_nice("denied",from);
-		io_notification("SEND: denied to jid: %s",from);
-		return 1;
-	}
 	switch (act) {
 		case NICE_AC_REQUEST:
 			//received a request action

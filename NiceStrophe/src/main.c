@@ -13,8 +13,6 @@ const char* const prog_version = "2.0";
 const char* const prog_author = "Marco Fantasia <fantasia.marco@gmail.com>";
 const char* const prog_name = "NiceStrophe";
 
-
-
 int main() {
 
 	io_init();
