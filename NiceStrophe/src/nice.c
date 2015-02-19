@@ -7,6 +7,7 @@
 #include "nice.h"
 #include <string.h>
 #include "io.h"
+#include <stdio.h>
 #include <stdlib.h>
 
 #define N_STATE 4
@@ -19,6 +20,18 @@ static const nice_acceptable_t acceptable_[N_STATE] = {NICE_AC_REQUEST, NICE_AC_
 static Nice_info* nice_info;
 static nice_status_t _nice_status=NICE_ST_INIT;
 static int controlling_state;
+//Nice setting
+static gboolean candidate_gathering_done, negotiation_done;
+static GCond gather_cond, negotiate_cond;
+NiceAgent *agent;
+GIOChannel* io_stdin;
+
+guint stream_id;
+gchar *line = NULL;
+gchar *sdp, *sdp64, *key64;
+
+
+
 
 nice_acceptable_t action_is_correct(const char* const action){
 	int i;
@@ -46,7 +59,62 @@ void nice_init(){
 	//todo ottenere la chiave64
 	//Cambio stato se ottengo la chiave
 	init_struct_nice();
-	nice_info->own_key64="1";
+	char *def_stun_server = "stun.stunprotocol.org";
+	char *def_stun_port = "3478";
+	controlling_state=1;
+	//risolvo indirizzo ip dell'url del server
+	//TODO stun_addr può essere pensato come una lista di indirizzi IP
+	stun_addr = hostname_to_ip(def_stun_server, def_stun_port);
+	stun_port = strtoul(def_stun_port, &port_err, 10);
+	if (*port_err != '\0'){
+		io_error("Numero porta errato [%s].\n",def_stun_port);
+		return;
+	}
+	io_notification("Using stun server '[%s]:%u'\n", stun_addr, stun_port);
+	agent = nice_agent_new(g_main_loop_get_context(gloop),NICE_COMPATIBILITY_RFC5245);
+	//Build agent
+	if (agent == NULL) {
+		io_error("Impossible to create the agent");
+	}
+	if (stun_addr) {
+		g_object_set(agent, "stun-server", stun_addr, NULL);
+		g_object_set(agent, "stun-server-port", stun_port, NULL);
+	}
+	g_object_set(agent, "controlling-mode", controlling_state, NULL);
+	//Connessione ai segnali
+	g_signal_connect(agent,"candidate-gathering-done",G_CALLBACK(cb_candidate_gathering_done), NULL);
+	g_signal_connect(agent,"component-state-changed" ,G_CALLBACK(cb_component_state_changed), NULL);
+	//Creo un nuovo stream con un componente
+	stream_id = nice_agent_add_stream(agent, 1);
+	if (stream_id == 0) {
+		io_error("Impossible to add stream");
+		return ;
+	}
+	nice_agent_set_stream_name(agent, stream_id, "text");
+	// Attach to the component to receive the data
+	// Without this call, candidates cannot be gathered
+	nice_agent_attach_recv(agent, stream_id, 1, g_main_loop_get_context(gloop), cb_nice_recv, NULL);
+	//Start to gather local candidates
+	if (!nice_agent_gather_candidates(agent, stream_id)) {
+		io_error("Failed to start candidate gathering");
+	}
+	io_notification("In attesa del segnale di candidate-gathering-done.\n");
+	g_mutex_lock(&gather_mutex);
+	while (!prog_running && !candidate_gathering_done) {
+//	while (!candidate_gathering_done) {
+		g_cond_wait(&gather_cond, &gather_mutex);
+	}
+	g_mutex_unlock(&gather_mutex);
+	//Fine acquisizione candidati. Stampa dei risultati
+	sdp = nice_agent_generate_local_sdp(agent);
+	io_notification("SDP generato dall'agente :\n%s\n\n", sdp);
+	//	printf("Questa linea deve essere inviata al server di RV:\n");
+	key64 = g_base64_encode((const guchar *) sdp, strlen(sdp));
+	io_notification("\n%s\n", key64);
+	//TODO Istanziare comunicazione con server esterno, invio key64
+	//TODO Rimanere in attesa di comunicazioni in entrata
+	g_free(sdp);
+	nice_info->own_key64 = key64;
 	_nice_status = NICE_ST_IDLE;
 }
 /**
@@ -104,7 +172,7 @@ int state_machine (nice_action_s s_r, nice_acceptable_t action){
 void nice_nonblock_handle(){
 	switch (_nice_status) {
 		case NICE_ST_INIT:
-			nice_init();
+			//nice_init();
 			break;
 		case NICE_ST_IDLE:
 			handleIdleState();
@@ -245,4 +313,40 @@ int getControllingState(){
 int setControllingState(int newState){
 	controlling_state=newState;
 	return controlling_state;
+}
+
+/**
+ * Funzioni Nice
+ */
+static void cb_candidate_gathering_done(NiceAgent *agent, guint stream_id,
+		gpointer data) {
+	g_debug("SIGNAL candidate gathering done\n");
+
+//  g_mutex_lock(&gather_mutex);
+	candidate_gathering_done = TRUE;
+	g_cond_signal(&gather_cond);
+//	g_mutex_unlock(&gather_mutex);
+}
+
+static void cb_component_state_changed(NiceAgent *agent, guint stream_id,
+		guint component_id, guint state, gpointer data) {
+	g_debug("SIGNAL: state changed %d %d %s[%d]\n", stream_id, component_id,
+			state_name[state], state);
+
+	if (state == NICE_COMPONENT_STATE_READY) {
+//		g_mutex_lock(&negotiate_mutex);
+		negotiation_done = TRUE;
+		g_cond_signal(&negotiate_cond);
+//		g_mutex_unlock(&negotiate_mutex);
+	} else if (state == NICE_COMPONENT_STATE_FAILED) {
+//		g_main_loop_quit(gloop);
+	}
+}
+
+static void cb_nice_recv(NiceAgent *agent, guint stream_id, guint component_id,
+		guint len, gchar *buf, gpointer data) {
+	if (len == 1 && buf[0] == '\0')
+//		g_main_loop_quit(gloop);
+	printf("%.*s", len, buf);
+//	fflush(stdout);
 }

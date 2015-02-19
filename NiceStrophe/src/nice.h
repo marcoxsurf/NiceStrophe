@@ -8,6 +8,11 @@
 #ifndef NICE_H_
 #define NICE_H_
 
+//#include <glib.h> incluso in agent.h
+#include <agent.h>
+#include "tools.h"
+#include "main.h"
+
 typedef enum {
 	NICE_ST_IDLE,
 	NICE_ST_WAITING_FOR,
@@ -100,5 +105,23 @@ char* setOtherJid(char* otherJ);
 
 int getControllingState();
 int setControllingState(int newState);
+
+/**
+ * Niceee
+ */
+static gchar *stun_addr = NULL;
+static guint stun_port;
+static gchar *port_err = NULL;
+
+static const gchar *state_name[] = {"disconnected", "gathering", "connecting",
+                                    "connected", "ready", "failed"};
+
+static void cb_candidate_gathering_done(NiceAgent *agent, guint stream_id,
+    gpointer data);
+static void cb_component_state_changed(NiceAgent *agent, guint stream_id,
+    guint component_id, guint state,
+    gpointer data);
+static void cb_nice_recv(NiceAgent *agent, guint stream_id, guint component_id,
+    guint len, gchar *buf, gpointer data);
 
 #endif /* NICE_H_ */
