@@ -17,11 +17,12 @@ static const char *acceptable[N_STATE] = {"request", "accept"
 static const nice_acceptable_t acceptable_[N_STATE] = {NICE_AC_REQUEST, NICE_AC_ACCEPTED
 		, NICE_AC_DENIED, NICE_AC_END};
 //static char *own_key64, *other_key64, *other_jid;
-static Nice_info* nice_info;
+
 static nice_status_t _nice_status=NICE_ST_INIT;
 static int controlling_state;
 //Nice setting
 static gboolean candidate_gathering_done, negotiation_done;
+static GMutex gather_mutex, negotiate_mutex;
 static GCond gather_cond, negotiate_cond;
 NiceAgent *agent;
 GIOChannel* io_stdin;
@@ -29,9 +30,6 @@ GIOChannel* io_stdin;
 guint stream_id;
 gchar *line = NULL;
 gchar *sdp, *sdp64, *key64;
-
-
-
 
 nice_acceptable_t action_is_correct(const char* const action){
 	int i;
@@ -55,8 +53,8 @@ nice_acceptable_t get_status(const char* const action){
 }
 
 void nice_init(){
-	//todo creare qui la connessione con il server stun
-	//todo ottenere la chiave64
+	//creare qui la connessione con il server stun
+	//ottenere la chiave64
 	//Cambio stato se ottengo la chiave
 	init_struct_nice();
 	char *def_stun_server = "stun.stunprotocol.org";
@@ -67,7 +65,7 @@ void nice_init(){
 	stun_addr = hostname_to_ip(def_stun_server, def_stun_port);
 	stun_port = strtoul(def_stun_port, &port_err, 10);
 	if (*port_err != '\0'){
-		io_error("Numero porta errato [%s].\n",def_stun_port);
+		io_error("Wrong port number [%s].\n",def_stun_port);
 		return;
 	}
 	io_notification("Using stun server '[%s]:%u'\n", stun_addr, stun_port);
@@ -83,11 +81,12 @@ void nice_init(){
 	g_object_set(agent, "controlling-mode", controlling_state, NULL);
 	//Connessione ai segnali
 	g_signal_connect(agent,"candidate-gathering-done",G_CALLBACK(cb_candidate_gathering_done), NULL);
+	g_signal_connect(agent,"new-selected-pair",       G_CALLBACK(cb_new_selected_pair), NULL);
 	g_signal_connect(agent,"component-state-changed" ,G_CALLBACK(cb_component_state_changed), NULL);
-	//Creo un nuovo stream con un componente
+	//Create a new stream with one component
 	stream_id = nice_agent_add_stream(agent, 1);
 	if (stream_id == 0) {
-		io_error("Impossible to add stream");
+		io_error("Failed to add stream");
 		return ;
 	}
 	nice_agent_set_stream_name(agent, stream_id, "text");
@@ -98,23 +97,29 @@ void nice_init(){
 	if (!nice_agent_gather_candidates(agent, stream_id)) {
 		io_error("Failed to start candidate gathering");
 	}
-	io_notification("In attesa del segnale di candidate-gathering-done.\n");
+	io_notification("waiting for candidate-gathering-done signal.\n");
 	g_mutex_lock(&gather_mutex);
 	while (!prog_running && !candidate_gathering_done) {
-//	while (!candidate_gathering_done) {
 		g_cond_wait(&gather_cond, &gather_mutex);
 	}
 	g_mutex_unlock(&gather_mutex);
+	if (!prog_running){
+		g_object_unref(agent);
+		g_main_loop_unref(gloop);
+		io_notification("Ending thread.");
+		return;
+	}
 	//Fine acquisizione candidati. Stampa dei risultati
 	sdp = nice_agent_generate_local_sdp(agent);
-	io_notification("SDP generato dall'agente :\n%s\n\n", sdp);
+	io_notification("Generated SDP:\n%s\n\n", sdp);
 	//	printf("Questa linea deve essere inviata al server di RV:\n");
 	key64 = g_base64_encode((const guchar *) sdp, strlen(sdp));
 	io_notification("\n%s\n", key64);
-	//TODO Istanziare comunicazione con server esterno, invio key64
-	//TODO Rimanere in attesa di comunicazioni in entrata
 	g_free(sdp);
-	nice_info->own_key64 = key64;
+//	nice_info->my_key64 = strdup(key64);
+	my_key64 = strdup(key64);
+//	setMyKey(key64);
+	g_free(key64);
 	_nice_status = NICE_ST_IDLE;
 }
 /**
@@ -133,15 +138,15 @@ int state_machine (nice_action_s s_r, nice_acceptable_t action){
 			//can accept only SEND/RECV Request action
 			if (action==NICE_AC_REQUEST){
 				_nice_status=NICE_ST_WAITING_FOR;
-				controlling_state=1;
-				//save jid
+				if (s_r==NICE_RECV){
+					controlling_state=0;
+				}
 				resp=1;
 			}
 			break;
 		case NICE_ST_WAITING_FOR:
 			if (action==NICE_AC_ACCEPTED){
 				_nice_status=NICE_ST_ACCEPTED;
-				controlling_state=0;
 				resp=1;
 			}else if (action==NICE_AC_DENIED){
 				_nice_status=NICE_ST_DENIED;
@@ -172,7 +177,7 @@ int state_machine (nice_action_s s_r, nice_acceptable_t action){
 void nice_nonblock_handle(){
 	switch (_nice_status) {
 		case NICE_ST_INIT:
-			//nice_init();
+			nice_init();
 			break;
 		case NICE_ST_IDLE:
 			handleIdleState();
@@ -205,14 +210,14 @@ void handleWaitingState(){
 
 }
 void handleDeniedState(){
-	io_notification("Nice request has been rejected from %s",getOtherJid());
+	io_notification("Nice request has been rejected from %s",other_jid);//getOtherJid());
 	clean_other_var();
 	_nice_status=NICE_ST_INIT;
 	io_notification("State changed to %s",getStatusName(_nice_status));
 }
 void handleAcceptedState(){
-	io_notification("Nice request has been accepted from %s",getOtherJid());
-	io_notification("This is the key: %s",getOtherKey());
+	io_notification("Nice request has been accepted from %s",other_jid);//getOtherJid());
+	io_notification("This is the key: %s",other_key64);//getOtherKey());
 	_nice_status=NICE_ST_BUSIED;
 	io_notification("State changed to %s",getStatusName(_nice_status));
 }
@@ -231,34 +236,56 @@ void handleEndedState(){
 }
 
 void clean_other_var(){
-	nice_info->other_jid=NULL;
-	nice_info->other_key64=NULL;
+	other_jid=NULL;
+	other_key64=NULL;
 }
 
-char* getOwnKey(){
-	return nice_info->own_key64;
+char* getMyJid(){
+	return my_jid;
+}
+
+char* getMyKey(){
+//	return nice_info->my_key64;
+	return my_key64;
 }
 
 char* getOtherKey(){
-	return nice_info->other_key64;
+//	return nice_info->other_key64;
+	return other_key64;
 }
 
 char* getOtherJid(){
-	return nice_info->other_jid;
+//	return nice_info->other_jid;
+	return other_jid;
+}
+
+char* setMyJid(char* jid){
+	my_jid=strdup(jid);
+	return my_jid;
+}
+char* setMyKey(char* key64){
+	my_key64=strdup(key64);
+	return my_key64;
 }
 
 char* setOtherKey(char* otherJ,char* otherK){
 	//know for sure that key corrispond to jid
 	if (strcmp(otherJ,getOtherJid())==0){
-		nice_info->other_key64=strdup(otherK);
+//		nice_info->other_key64=strdup(otherK);
+		other_key64=strdup(otherK);
+//		io_notification("Change other key to %s",nice_info->other_key64);
+		io_notification("Change other key to %s",other_key64);
 	}
-	return nice_info->other_key64;
+//	return nice_info->other_key64;
+	return other_key64;
 }
 char* setOtherJid(char* otherJ){
 	if (_nice_status==NICE_ST_IDLE){
-		nice_info->other_jid=strdup(otherJ);
+//		nice_info->other_jid=strdup(otherJ);
+		other_jid=strdup(otherJ);
 	}
-	return nice_info->other_jid;
+//	return nice_info->other_jid;
+	return other_jid;
 }
 
 const char* getStatusName( nice_status_t status){
@@ -301,10 +328,15 @@ const char* getActionName( nice_acceptable_t action){
 }
 
 void init_struct_nice(){
-	nice_info = malloc(sizeof(Nice_info));
-	nice_info->own_key64=malloc(sizeof(char)*255);
-	nice_info->other_key64=malloc(sizeof(char)*255);
-	nice_info->other_jid=malloc(sizeof(char)*255);
+//	nice_info = malloc(sizeof(Nice_info));
+//	nice_info->my_jid=malloc(sizeof(char)*255);
+//	nice_info->my_key64=malloc(sizeof(char)*255);
+//	nice_info->other_key64=malloc(sizeof(char)*255);
+//	nice_info->other_jid=malloc(sizeof(char)*255);
+	my_jid=strdup("");
+	my_key64=strdup("");
+	other_key64=strdup("");
+	other_jid=strdup("");
 }
 
 int getControllingState(){
@@ -321,32 +353,35 @@ int setControllingState(int newState){
 static void cb_candidate_gathering_done(NiceAgent *agent, guint stream_id,
 		gpointer data) {
 	g_debug("SIGNAL candidate gathering done\n");
-
-//  g_mutex_lock(&gather_mutex);
+	g_mutex_lock(&gather_mutex);
 	candidate_gathering_done = TRUE;
 	g_cond_signal(&gather_cond);
-//	g_mutex_unlock(&gather_mutex);
+	g_mutex_unlock(&gather_mutex);
 }
 
 static void cb_component_state_changed(NiceAgent *agent, guint stream_id,
 		guint component_id, guint state, gpointer data) {
-	g_debug("SIGNAL: state changed %d %d %s[%d]\n", stream_id, component_id,
+	io_notification("SIGNAL: state changed %d %d %s[%d]\n", stream_id, component_id,
 			state_name[state], state);
-
 	if (state == NICE_COMPONENT_STATE_READY) {
-//		g_mutex_lock(&negotiate_mutex);
+		g_mutex_lock(&negotiate_mutex);
 		negotiation_done = TRUE;
 		g_cond_signal(&negotiate_cond);
-//		g_mutex_unlock(&negotiate_mutex);
+		g_mutex_unlock(&negotiate_mutex);
 	} else if (state == NICE_COMPONENT_STATE_FAILED) {
-//		g_main_loop_quit(gloop);
+		g_main_loop_quit(gloop);
 	}
 }
 
 static void cb_nice_recv(NiceAgent *agent, guint stream_id, guint component_id,
 		guint len, gchar *buf, gpointer data) {
 	if (len == 1 && buf[0] == '\0')
-//		g_main_loop_quit(gloop);
+		g_main_loop_quit(gloop);
+	//TODO controllare ricezioni messaggi nice
 	printf("%.*s", len, buf);
 //	fflush(stdout);
+}
+static void cb_new_selected_pair(NiceAgent *agent, guint stream_id,
+    guint component_id, gchar *lfoundation,gchar *rfoundation, gpointer data){
+	io_notification("SIGNAL: selected pair %s %s", lfoundation, rfoundation);
 }

@@ -50,18 +50,13 @@ int main() {
 	GThread *gthread_xmpp;
 	gloop = g_main_loop_new(NULL, FALSE);
 	//Eseguo il main_loop e il thread
-	exit_thread = FALSE;
-	gthread_nice = g_thread_new("_thread_nice", &_thread_nice, NULL);
 	gthread_xmpp = g_thread_new("_thread_xmpp", &_thread_xmpp, NULL);
+	gthread_nice = g_thread_new("_thread_nice", &_thread_nice, NULL);
 	//esegue il loop fino a che non viene chiamato g_main_loop_quit
 	g_main_loop_run(gloop);
-	exit_thread = TRUE;
 	//aspetto che termini
-	g_thread_join(gthread_nice);
 	g_thread_join(gthread_xmpp);
+	g_thread_join(gthread_nice);
 	g_main_loop_unref(gloop);
 	return EXIT_SUCCESS;
-
-	nice_init();
-
 }

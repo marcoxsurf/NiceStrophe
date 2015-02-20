@@ -47,11 +47,17 @@ typedef enum{
 	NICE_SEND
 } nice_action_s;
 
-typedef struct _info {
-	char *own_key64;
-	char *other_key64;
-	char *other_jid;
-} Nice_info;
+//typedef struct _info {
+//	char *my_jid;
+//	char *my_key64;
+//	char *other_key64;
+//	char *other_jid;
+//} Nice_info;
+
+char *my_jid;
+char *my_key64;
+char *other_key64;
+char *other_jid;
 
 void nice_nonblock_handle();
 
@@ -96,10 +102,13 @@ void init_struct_nice();
 /**
  * return Own key 64
  */
-char* getOwnKey();
+char* getMyJid();
+char* getMyKey();
 char* getOtherKey();
 char* getOtherJid();
 
+char* setMyJid(char* jid);
+char* setMyKey(char* key64);
 char* setOtherKey(char* otherJ,char* otherK);
 char* setOtherJid(char* otherJ);
 
@@ -107,11 +116,12 @@ int getControllingState();
 int setControllingState(int newState);
 
 /**
- * Niceee
+ * Nice
  */
 static gchar *stun_addr = NULL;
 static guint stun_port;
 static gchar *port_err = NULL;
+//static Nice_info* nice_info;
 
 static const gchar *state_name[] = {"disconnected", "gathering", "connecting",
                                     "connected", "ready", "failed"};
@@ -123,5 +133,7 @@ static void cb_component_state_changed(NiceAgent *agent, guint stream_id,
     gpointer data);
 static void cb_nice_recv(NiceAgent *agent, guint stream_id, guint component_id,
     guint len, gchar *buf, gpointer data);
+static void cb_new_selected_pair(NiceAgent *agent, guint stream_id,guint component_id
+		, gchar *lfoundation,gchar *rfoundation, gpointer data);
 
 #endif /* NICE_H_ */
