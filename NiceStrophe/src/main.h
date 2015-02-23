@@ -7,6 +7,6 @@ extern int prog_running;
 
 
 
-static GMainLoop *gloop;
+GMainLoop *gloop;
 
-static gboolean exit_thread;
+gboolean exit_thread;

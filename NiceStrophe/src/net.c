@@ -246,7 +246,7 @@ void net_nice(const char* const action, const char* const jid) {
 	//va inserita la chiave64 generata dalla procedura NICE
 	char* key64 = strdup(getMyKey());
 //	io_notification("key is %s",key64);
-	char *ans;
+//	char *ans;
 	xmpp_stanza_t *msg, *body, *_nice, *_action, *_key64;//, *_jid;//, *text;
 	nice_acceptable_t act=NICE_AC_NO;
 

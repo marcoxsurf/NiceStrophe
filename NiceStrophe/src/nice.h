@@ -47,12 +47,12 @@ typedef enum{
 	NICE_SEND
 } nice_action_s;
 
-//typedef struct _info {
-//	char *my_jid;
-//	char *my_key64;
-//	char *other_key64;
-//	char *other_jid;
-//} Nice_info;
+typedef struct _info {
+	char *my_jid;
+	char *my_key64;
+	char *other_key64;
+	char *other_jid;
+} Nice_info;
 
 char *my_jid;
 char *my_key64;
@@ -110,21 +110,13 @@ char* getOtherJid();
 char* setMyJid(char* jid);
 char* setMyKey(char* key64);
 char* setOtherKey(char* otherJ,char* otherK);
-char* setOtherJid(char* otherJ);
+char* setOtherJid(const char* otherJ);
 
 int getControllingState();
 int setControllingState(int newState);
 
-/**
- * Nice
- */
-static gchar *stun_addr = NULL;
-static guint stun_port;
-static gchar *port_err = NULL;
-//static Nice_info* nice_info;
 
-static const gchar *state_name[] = {"disconnected", "gathering", "connecting",
-                                    "connected", "ready", "failed"};
+//static Nice_info* nice_info;
 
 static void cb_candidate_gathering_done(NiceAgent *agent, guint stream_id,
     gpointer data);

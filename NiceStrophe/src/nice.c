@@ -11,6 +11,14 @@
 #include <stdlib.h>
 
 #define N_STATE 4
+static const gchar *state_name[] = {"disconnected", "gathering", "connecting",
+                                    "connected", "ready", "failed"};
+/**
+ * Nice
+ */
+static gchar *stun_addr = NULL;
+static guint stun_port;
+static gchar *port_err = NULL;
 
 static const char *acceptable[N_STATE] = {"request", "accept"
 		, "denied", "ended"};
@@ -279,7 +287,7 @@ char* setOtherKey(char* otherJ,char* otherK){
 //	return nice_info->other_key64;
 	return other_key64;
 }
-char* setOtherJid(char* otherJ){
+char* setOtherJid(const char* otherJ){
 	if (_nice_status==NICE_ST_IDLE){
 //		nice_info->other_jid=strdup(otherJ);
 		other_jid=strdup(otherJ);
