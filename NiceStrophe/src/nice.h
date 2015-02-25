@@ -8,10 +8,7 @@
 #ifndef NICE_H_
 #define NICE_H_
 
-//#include <glib.h> incluso in agent.h
 #include <agent.h>
-#include "tools.h"
-#include "main.h"
 
 typedef enum {
 	NICE_ST_IDLE,
@@ -47,17 +44,17 @@ typedef enum{
 	NICE_SEND
 } nice_action_s;
 
-typedef struct _info {
-	char *my_jid;
-	char *my_key64;
-	char *other_key64;
-	char *other_jid;
-} Nice_info;
+//typedef struct _info {
+//	char *my_jid;
+//	char *my_key64;
+//	char *other_key64;
+//	char *other_jid;
+//} Nice_info;
 
-char *my_jid;
-char *my_key64;
-char *other_key64;
-char *other_jid;
+//char *my_jid;
+//char *my_key64;
+//char *other_key64;
+//char *other_jid;
 
 void nice_nonblock_handle();
 

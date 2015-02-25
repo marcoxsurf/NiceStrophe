@@ -18,14 +18,15 @@ const char* const prog_name = "NiceStrophe";
 /**
  * Thread per la gestione delle connessioni 'Nice'
  */
-static void * _thread_nice(void *data) {
+static void* _thread_nice(void *data) {
 	nice_init();
 	while(prog_running){
 		nice_nonblock_handle();
 	}
+	return 0;
 }
 
-static void * _thread_xmpp(void *data) {
+static void* _thread_xmpp(void *data) {
 	io_init();
 	li_init();
 	msg_init();
@@ -46,6 +47,8 @@ static void * _thread_xmpp(void *data) {
 }
 
 int main() {
+	nice_info=malloc(sizeof(Nice_info));
+
 	GThread *gthread_nice;
 	GThread *gthread_xmpp;
 	gloop = g_main_loop_new(NULL, FALSE);

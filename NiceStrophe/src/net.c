@@ -170,21 +170,21 @@ int handle_nice(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza,
 		case NICE_AC_REQUEST:
 			//received a request action
 			//saving jid&key
-//			setOtherJid(from);
-//			setOtherKey(from,key64);
-			other_jid=strdup(from);
-			other_key64=strdup(key64);
+			setOtherJid(from);
+			setOtherKey(from,key64);
+//			other_jid=strdup(from);
+//			other_key64=strdup(key64);
 			break;
 		case NICE_AC_ACCEPTED:
 			//received an accepted action
 			//saving key, know that if jid != problem
-			if (strcmp(from,other_jid)!=0){
+			if (strcmp(from,nice_info->other_jid)!=0){
 				//key64 is different from otherkey.
 				//it means that received an accept request from an unwanted jid
 				io_error("Received key from different jid");
 				return 1;
 			}
-			other_key64=strdup(key64);
+			nice_info->other_key64=strdup(key64);
 			break;
 		case NICE_AC_DENIED:
 			break;
@@ -194,7 +194,7 @@ int handle_nice(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza,
 			return 1;
 			break;
 	}
-	io_notification("jid %s, key %s",other_jid,other_key64);// getOtherJid(),getOtherKey());
+	io_notification("jid %s, key %s", getOtherJid(),getOtherKey());//other_jid,other_key64);//
 	if(!state_machine(NICE_RECV,act)){
 		io_error("The selected action is not valid right now!");
 	}
@@ -285,7 +285,7 @@ void net_nice(const char* const action, const char* const jid) {
 	_action=xmpp_stanza_new(ctx);
 	xmpp_stanza_set_name(_action, "action");
 	xmpp_stanza_set_type(_action, action);
-	xmpp_stanza_set_attribute(_action, "from",my_jid);
+	xmpp_stanza_set_attribute(_action, "from",nice_info->my_jid);
 //	_jid=xmpp_stanza_new(ctx);
 //	xmpp_stanza_set_name(_jid, "from");
 //	xmpp_stanza_set_attribute(_jid, "value", my_jid);
@@ -341,7 +341,7 @@ static void connected(xmpp_conn_t* const conn) {
 	const char* full_jid = xmpp_conn_get_bound_jid(conn);
 	roster_init();
 //	nice_info->my_jid=strdup(xmpp_conn_get_jid(conn));
-	my_jid=strdup(xmpp_conn_get_jid(conn));
+	nice_info->my_jid=strdup(xmpp_conn_get_jid(conn));
 	io_notification("Connected as `%s'.", full_jid);
 	io_prompt_set(NET_ST_ONLINE);
 }

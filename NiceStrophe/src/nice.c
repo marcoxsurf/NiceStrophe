@@ -9,6 +9,10 @@
 #include "io.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "main.h"
+//#include <glib.h> incluso in agent.h
+
+#include "tools.h"
 
 #define N_STATE 4
 static const gchar *state_name[] = {"disconnected", "gathering", "connecting",
@@ -124,8 +128,8 @@ void nice_init(){
 	key64 = g_base64_encode((const guchar *) sdp, strlen(sdp));
 	io_notification("\n%s\n", key64);
 	g_free(sdp);
-//	nice_info->my_key64 = strdup(key64);
-	my_key64 = strdup(key64);
+	nice_info->my_key64 = strdup(key64);
+//	my_key64 = strdup(key64);
 //	setMyKey(key64);
 	g_free(key64);
 	_nice_status = NICE_ST_IDLE;
@@ -218,14 +222,14 @@ void handleWaitingState(){
 
 }
 void handleDeniedState(){
-	io_notification("Nice request has been rejected from %s",other_jid);//getOtherJid());
+	io_notification("Nice request has been rejected from %s",nice_info->other_jid);//other_jid);//getOtherJid());
 	clean_other_var();
 	_nice_status=NICE_ST_INIT;
 	io_notification("State changed to %s",getStatusName(_nice_status));
 }
 void handleAcceptedState(){
-	io_notification("Nice request has been accepted from %s",other_jid);//getOtherJid());
-	io_notification("This is the key: %s",other_key64);//getOtherKey());
+	io_notification("Nice request has been accepted from %s",nice_info->other_jid);//other_jid);//getOtherJid());
+	io_notification("This is the key: %s",nice_info->other_key64);//getOtherKey());
 	_nice_status=NICE_ST_BUSIED;
 	io_notification("State changed to %s",getStatusName(_nice_status));
 }
@@ -244,56 +248,56 @@ void handleEndedState(){
 }
 
 void clean_other_var(){
-	other_jid=NULL;
-	other_key64=NULL;
+	nice_info->other_jid=malloc(sizeof(char)*255);
+	nice_info->other_key64=malloc(sizeof(char)*1250);
 }
 
 char* getMyJid(){
-	return my_jid;
+	return nice_info->my_jid;
 }
 
 char* getMyKey(){
-//	return nice_info->my_key64;
-	return my_key64;
+	return nice_info->my_key64;
+//	return my_key64;
 }
 
 char* getOtherKey(){
-//	return nice_info->other_key64;
-	return other_key64;
+	return nice_info->other_key64;
+//	return other_key64;
 }
 
 char* getOtherJid(){
-//	return nice_info->other_jid;
-	return other_jid;
+	return nice_info->other_jid;
+//	return other_jid;
 }
 
 char* setMyJid(char* jid){
-	my_jid=strdup(jid);
-	return my_jid;
+	nice_info->my_jid=strdup(jid);
+	return nice_info->my_jid;
 }
 char* setMyKey(char* key64){
-	my_key64=strdup(key64);
-	return my_key64;
+	nice_info->my_key64=strdup(key64);
+	return nice_info->my_key64;
 }
 
 char* setOtherKey(char* otherJ,char* otherK){
 	//know for sure that key corrispond to jid
 	if (strcmp(otherJ,getOtherJid())==0){
-//		nice_info->other_key64=strdup(otherK);
-		other_key64=strdup(otherK);
-//		io_notification("Change other key to %s",nice_info->other_key64);
-		io_notification("Change other key to %s",other_key64);
+		nice_info->other_key64=strdup(otherK);
+//		other_key64=strdup(otherK);
+		io_notification("Change other key to %s",nice_info->other_key64);
+//		io_notification("Change other key to %s",other_key64);
 	}
-//	return nice_info->other_key64;
-	return other_key64;
+	return nice_info->other_key64;
+//	return other_key64;
 }
 char* setOtherJid(const char* otherJ){
 	if (_nice_status==NICE_ST_IDLE){
-//		nice_info->other_jid=strdup(otherJ);
-		other_jid=strdup(otherJ);
+		nice_info->other_jid=strdup(otherJ);
+//		other_jid=strdup(otherJ);
 	}
-//	return nice_info->other_jid;
-	return other_jid;
+	return nice_info->other_jid;
+//	return other_jid;
 }
 
 const char* getStatusName( nice_status_t status){
@@ -336,15 +340,15 @@ const char* getActionName( nice_acceptable_t action){
 }
 
 void init_struct_nice(){
-//	nice_info = malloc(sizeof(Nice_info));
+	nice_info = malloc(sizeof(Nice_info));
 //	nice_info->my_jid=malloc(sizeof(char)*255);
-//	nice_info->my_key64=malloc(sizeof(char)*255);
+//	nice_info->my_key64=malloc(sizeof(char)*1255);
 //	nice_info->other_key64=malloc(sizeof(char)*255);
-//	nice_info->other_jid=malloc(sizeof(char)*255);
-	my_jid=strdup("");
-	my_key64=strdup("");
-	other_key64=strdup("");
-	other_jid=strdup("");
+//	nice_info->other_jid=malloc(sizeof(char)*1255);
+//	my_jid=strdup("");
+//	my_key64=strdup("");
+//	other_key64=strdup("");
+//	other_jid=strdup("");
 }
 
 int getControllingState(){
