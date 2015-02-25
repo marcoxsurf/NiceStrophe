@@ -9,6 +9,7 @@
 #include "io.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include "main.h"
 //#include <glib.h> incluso in agent.h
 
@@ -30,7 +31,7 @@ static const nice_acceptable_t acceptable_[N_STATE] = {NICE_AC_REQUEST, NICE_AC_
 		, NICE_AC_DENIED, NICE_AC_END};
 //static char *own_key64, *other_key64, *other_jid;
 
-static nice_status_t _nice_status=NICE_ST_INIT;
+//static nice_status_t _nice_status=NICE_ST_INIT;
 static int controlling_state;
 //Nice setting
 static gboolean candidate_gathering_done, negotiation_done;
@@ -216,7 +217,7 @@ void nice_nonblock_handle(){
 
 void handleIdleState(){
 	//verify if vars are clean
-	clean_other_var();
+	//clean_other_var();
 }
 void handleWaitingState(){
 
@@ -235,10 +236,11 @@ void handleAcceptedState(){
 }
 void handleBusyedState(){
 	//todo iniziare qui la comunicazione
-//	while(1){
-//
-//	}
-//	io_notification("Busied");
+	while(1){
+		io_notification("Busied");
+		sleep(10);
+	}
+
 }
 void handleEndedState(){
 	io_notification("Nice trasmission has ended.");
@@ -248,8 +250,8 @@ void handleEndedState(){
 }
 
 void clean_other_var(){
-	nice_info->other_jid=malloc(sizeof(char)*255);
-	nice_info->other_key64=malloc(sizeof(char)*1250);
+	nice_info->other_jid=NULL;
+	nice_info->other_key64=NULL;
 }
 
 char* getMyJid(){

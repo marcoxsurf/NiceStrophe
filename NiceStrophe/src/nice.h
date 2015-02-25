@@ -44,12 +44,12 @@ typedef enum{
 	NICE_SEND
 } nice_action_s;
 
-//typedef struct _info {
-//	char *my_jid;
-//	char *my_key64;
-//	char *other_key64;
-//	char *other_jid;
-//} Nice_info;
+typedef struct _info {
+	char *my_jid;
+	char *my_key64;
+	char *other_key64;
+	char *other_jid;
+} Nice_info;
 
 //char *my_jid;
 //char *my_key64;

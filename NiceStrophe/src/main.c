@@ -48,6 +48,7 @@ static void* _thread_xmpp(void *data) {
 
 int main() {
 	nice_info=malloc(sizeof(Nice_info));
+	_nice_status=NICE_ST_INIT;
 
 	GThread *gthread_nice;
 	GThread *gthread_xmpp;
