@@ -116,7 +116,6 @@ int handle_nice(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza,
 	char *action, *key64;
 	xmpp_stanza_t *body, *nice, *_action, *_key64;//, *_jid;
 	nice_acceptable_t act;
-//	msg_queue_t* q;
 	if (!xmpp_stanza_get_child_by_name(stanza, "body"))
 		return 1;
 	if (!strcmp(xmpp_stanza_get_attribute(stanza, "type"), "error"))
@@ -133,32 +132,27 @@ int handle_nice(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza,
 		return 1;
 	}
 	action = xmpp_stanza_get_type(_action);
-//	io_notification("Action is %s", action);
 	_key64 = xmpp_stanza_get_child_by_name(nice, "key64");
 	if (_key64 == NULL) {
 		io_error("Key64 tag needed");
 		return 1;
 	}
 	//Create a bare JID from a JID
-//	_jid = xmpp_stanza_get_child_by_name(nice, "from");
-//	if (_jid == NULL){
-//		io_error("From tag needed");
-//		return 1;
-//	}
 	if (xmpp_stanza_get_attribute(_action,"from")==NULL){
 		io_error("From tag needed");
 		return 1;
 	}
 	from = strdup(xmpp_stanza_get_attribute(_action,"from"));
-//	if (strcmp(from,getOtherJid())==0){
-//		io_error("Received action from wrong jid, %s",from);
-//	}
+	//if status is idle, accept all request from other jid
+	//otherwise accept only actions from saved jid
+	if (!(_nice_status==NICE_ST_IDLE || strcmp(from,getOtherJid())==0)){
+		io_error("Received action from wrong jid, %s",from);
+	}
 	key64=strdup(xmpp_stanza_get_attribute(_key64,"value"));
 	if (key64==NULL){
 		io_error("Key64 is NULL");
 		return 1;
 	}
-//	io_notification("Received key %s",key64);
 	intext = xmpp_stanza_get_text(body);
 	//need to print nice message meaning
 	if ((act=action_is_correct(action))==NICE_AC_NO){
@@ -172,18 +166,8 @@ int handle_nice(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza,
 			//saving jid&key
 			setOtherJid(from);
 			setOtherKey(from,key64);
-//			other_jid=strdup(from);
-//			other_key64=strdup(key64);
 			break;
 		case NICE_AC_ACCEPTED:
-			//received an accepted action
-			//saving key, know that if jid != problem
-			if (strcmp(from,nice_info->other_jid)!=0){
-				//key64 is different from otherkey.
-				//it means that received an accept request from an unwanted jid
-				io_error("Received key from different jid");
-				return 1;
-			}
 			nice_info->other_key64=strdup(key64);
 			break;
 		case NICE_AC_DENIED:
@@ -194,13 +178,10 @@ int handle_nice(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza,
 			return 1;
 			break;
 	}
-	io_notification("jid %s, key %s", getOtherJid(),getOtherKey());//other_jid,other_key64);//
 	if(!state_machine(NICE_RECV,act)){
 		io_error("The selected action is not valid right now!");
 	}
-//	q = msg_queue_get(from);
 	xmpp_free(ctx, from);
-//	msg_queue_write(q, intext);
 	xmpp_free(ctx, intext);
 	return 1;
 }
@@ -241,12 +222,7 @@ void net_send(const char* const str) {
 }
 
 void net_nice(const char* const action, const char* const jid) {
-//	msg_queue_t* q;
-
-	//va inserita la chiave64 generata dalla procedura NICE
 	char* key64 = strdup(getMyKey());
-//	io_notification("key is %s",key64);
-//	char *ans;
 	xmpp_stanza_t *msg, *body, *_nice, *_action, *_key64;//, *_jid;//, *text;
 	nice_acceptable_t act=NICE_AC_NO;
 
@@ -257,13 +233,9 @@ void net_nice(const char* const action, const char* const jid) {
 	if (!jid){
 		io_error("No recipient selected");
 	}
-//	if (!(q = msg_active_queue_get())) {
-//		io_error("No recipient selected.");
-//		return;
-//	}
 	/**
-	 * Controllo se azione scelta è tra le disponibili
-	 * request, accept, denied
+	 * Check if action is acceptable
+	 * request, accept, denied, end
 	 */
 	if ((act=action_is_correct(action))==NICE_AC_NO){
 		io_error("The action you selected is not correct");
@@ -286,9 +258,6 @@ void net_nice(const char* const action, const char* const jid) {
 	xmpp_stanza_set_name(_action, "action");
 	xmpp_stanza_set_type(_action, action);
 	xmpp_stanza_set_attribute(_action, "from",nice_info->my_jid);
-//	_jid=xmpp_stanza_new(ctx);
-//	xmpp_stanza_set_name(_jid, "from");
-//	xmpp_stanza_set_attribute(_jid, "value", my_jid);
 	_key64=xmpp_stanza_new(ctx);
 	xmpp_stanza_set_name(_key64, "key64");
 	switch (act) {
@@ -308,21 +277,10 @@ void net_nice(const char* const action, const char* const jid) {
 		case NICE_AC_NO:
 			break;
 	}
-//	ans=malloc(sizeof(strlen(action)+strlen(key64)+1+1)); //aggiungo uno spazio + \0
-//	io_notification("Size is %d",sizeof(ans));
-//	strcpy(ans,action);
-//	ans=strdup(action);
-//	strcat(ans," ");
-//	strcat(ans,key64);
-
 	xmpp_stanza_add_child(_nice, _action);
-//	xmpp_stanza_add_child(_nice, _jid);
 	xmpp_stanza_add_child(_nice, _key64);
 	xmpp_stanza_add_child(body, _nice);
 
-//	text = xmpp_stanza_new(ctx);
-//	xmpp_stanza_set_text(text, ans);
-//	xmpp_stanza_add_child(body, text);
 
 	xmpp_stanza_add_child(msg, body);
 	//set nice session status
@@ -333,14 +291,12 @@ void net_nice(const char* const action, const char* const jid) {
 	}
 	xmpp_send(conn, msg);
 	xmpp_stanza_release(msg);
-	io_printfln("SENT nice: %s to %s having key: %s",action,jid,key64);
-//	io_message(xmpp_conn_get_bound_jid(conn), ans);
+	io_printfln("SENT nice: %s to %s ",action,jid);
 }
 
 static void connected(xmpp_conn_t* const conn) {
 	const char* full_jid = xmpp_conn_get_bound_jid(conn);
 	roster_init();
-//	nice_info->my_jid=strdup(xmpp_conn_get_jid(conn));
 	nice_info->my_jid=strdup(xmpp_conn_get_jid(conn));
 	io_notification("Connected as `%s'.", full_jid);
 	io_prompt_set(NET_ST_ONLINE);

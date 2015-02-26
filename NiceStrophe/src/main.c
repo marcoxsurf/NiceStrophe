@@ -23,6 +23,7 @@ static void* _thread_nice(void *data) {
 	while(prog_running){
 		nice_nonblock_handle();
 	}
+	nice_deinit();
 	return 0;
 }
 
@@ -31,9 +32,7 @@ static void* _thread_xmpp(void *data) {
 	li_init();
 	msg_init();
 	net_init();
-	io_printfln("Welcome in %s, %s by %s.", prog_name, prog_version,
-			prog_author);
-	io_printfln("Type /help for assistance.");
+
 	while (prog_running) {
 		io_nonblock_handle();
 		net_nonblock_handle();
@@ -49,10 +48,11 @@ static void* _thread_xmpp(void *data) {
 int main() {
 	nice_info=malloc(sizeof(Nice_info));
 	_nice_status=NICE_ST_INIT;
-
 	GThread *gthread_nice;
 	GThread *gthread_xmpp;
 	gloop = g_main_loop_new(NULL, FALSE);
+	printf("Welcome in %s, %s by %s.\n", prog_name, prog_version,prog_author);
+	printf("Type /help for assistance.");
 	//Eseguo il main_loop e il thread
 	gthread_xmpp = g_thread_new("_thread_xmpp", &_thread_xmpp, NULL);
 	gthread_nice = g_thread_new("_thread_nice", &_thread_nice, NULL);

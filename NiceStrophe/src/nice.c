@@ -26,7 +26,7 @@ static guint stun_port;
 static gchar *port_err = NULL;
 
 static const char *acceptable[N_STATE] = {"request", "accept"
-		, "denied", "ended"};
+		, "denied", "end"};
 static const nice_acceptable_t acceptable_[N_STATE] = {NICE_AC_REQUEST, NICE_AC_ACCEPTED
 		, NICE_AC_DENIED, NICE_AC_END};
 //static char *own_key64, *other_key64, *other_jid;
@@ -135,6 +135,12 @@ void nice_init(){
 	g_free(key64);
 	_nice_status = NICE_ST_IDLE;
 }
+
+void nice_deinit(){
+	g_object_unref(agent);
+	g_main_loop_quit(gloop);
+}
+
 /**
  * Function that handle the nice communication state
  */
@@ -153,6 +159,7 @@ int state_machine (nice_action_s s_r, nice_acceptable_t action){
 				_nice_status=NICE_ST_WAITING_FOR;
 				if (s_r==NICE_RECV){
 					controlling_state=0;
+					//TODO rigenerare connessione nice
 				}
 				resp=1;
 			}
@@ -230,23 +237,24 @@ void handleDeniedState(){
 }
 void handleAcceptedState(){
 	io_notification("Nice request has been accepted from %s",nice_info->other_jid);//other_jid);//getOtherJid());
-	io_notification("This is the key: %s",nice_info->other_key64);//getOtherKey());
+//	io_notification("This is the key: %s",nice_info->other_key64);//getOtherKey());
 	_nice_status=NICE_ST_BUSIED;
 	io_notification("State changed to %s",getStatusName(_nice_status));
 }
 void handleBusyedState(){
 	//todo iniziare qui la comunicazione
-	while(1){
+//	while(1){
 		io_notification("Busied");
 		sleep(10);
-	}
+//	}
 
 }
 void handleEndedState(){
 	io_notification("Nice trasmission has ended.");
+	clean_other_var();
+	//prog_running=0;
 	_nice_status=NICE_ST_INIT;
 	io_notification("State changed to %s",getStatusName(_nice_status));
-	clean_other_var();
 }
 
 void clean_other_var(){
@@ -287,7 +295,7 @@ char* setOtherKey(char* otherJ,char* otherK){
 	if (strcmp(otherJ,getOtherJid())==0){
 		nice_info->other_key64=strdup(otherK);
 //		other_key64=strdup(otherK);
-		io_notification("Change other key to %s",nice_info->other_key64);
+//		io_notification("Change other key to %s",nice_info->other_key64);
 //		io_notification("Change other key to %s",other_key64);
 	}
 	return nice_info->other_key64;

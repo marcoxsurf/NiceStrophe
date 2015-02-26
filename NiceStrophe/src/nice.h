@@ -59,6 +59,7 @@ typedef struct _info {
 void nice_nonblock_handle();
 
 void nice_init();
+void nice_deinit();
 /**
  * Add nice capabilities
  */

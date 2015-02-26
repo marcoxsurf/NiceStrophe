@@ -83,7 +83,6 @@ void io_nonblock_handle() {
 	t.tv_usec = 0;
 	//Sets the bit for the file descriptor STDIN_FILENO in the file descriptor set fds.
 	FD_SET(STDIN_FILENO, &fds);
-	//ascolta input da più sorgenti
 	//The value of this macro is the maximum number of file descriptors that a fd_set object can hold information about
 	count = select(FD_SETSIZE, &fds, NULL, NULL, &t);
 	if (count < 0) {
@@ -117,23 +116,6 @@ const char* io_prompt_get() {
 	return prompt;
 }
 
-/*
-void io_set_prompt(net_status_t st) {
-	if (prompt == NULL) {
-		free(prompt);
-	}
-	prompt = strdup(str);
-	if (prompt == NULL) {
-		abort();
-	}
-	if (prog_running) {
-		rl_set_prompt(str);
-	} else {
-		rl_set_prompt("");
-	}
-	rl_redisplay();
-}*/
-
 typedef void (*print_func)(void*);
 
 static void io_async_print(print_func func, void* data) {
@@ -163,13 +145,6 @@ struct io_async_func_data {
 	const char* fmt;
 	va_list args;
 };
-
-/*
-void io_vprintfln(const char* const fmt, va_list args) {
-
-	struct io_async_func_data* d = (struct io_async_func_data*)data;
-	vprintf(d->fmt, d->args);
-}*/
 
 static void io_notification_func(void* data) {
 	struct io_async_func_data* d = (struct io_async_func_data*)data;
@@ -246,7 +221,6 @@ void io_message(const char* jid, const char* msg) {
 void io_getpass_func(void* d) {
 	char** ret = (char**)d;
 	char* pass;
-
 	pass = getpass("password: ");
 	*ret = strdup(pass);
 	//rl_already_prompted = true;
@@ -263,13 +237,10 @@ char* io_getpass() {
 void io_init() {
 	//Initializes the file descriptor set fds to have zero bits for all file descriptors.
 	FD_ZERO(&fds);
-	//Imposto cursore per il prompt
 	io_prompt_set(NET_ST_DISCONNECTED);
-	//disabilito invio
 	install_line_handler();
 	rl_readline_name = prog_name;
 	rl_attempted_completion_function = cmd_root_autocompleter;
-
 }
 
 void io_deinit() {
