@@ -32,7 +32,6 @@ static void* _thread_xmpp(void *data) {
 	li_init();
 	msg_init();
 	net_init();
-
 	while (prog_running) {
 		io_nonblock_handle();
 		net_nonblock_handle();

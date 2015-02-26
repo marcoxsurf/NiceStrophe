@@ -51,15 +51,13 @@ typedef struct _info {
 	char *other_jid;
 } Nice_info;
 
-//char *my_jid;
-//char *my_key64;
-//char *other_key64;
-//char *other_jid;
+int controlling_state;
 
 void nice_nonblock_handle();
 
 void nice_init();
 void nice_deinit();
+void setting_connection();
 /**
  * Add nice capabilities
  */

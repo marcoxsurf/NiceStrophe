@@ -222,7 +222,7 @@ void net_send(const char* const str) {
 }
 
 void net_nice(const char* const action, const char* const jid) {
-	char* key64 = strdup(getMyKey());
+	//char* key64 = strdup(getMyKey());
 	xmpp_stanza_t *msg, *body, *_nice, *_action, *_key64;//, *_jid;//, *text;
 	nice_acceptable_t act=NICE_AC_NO;
 
@@ -262,11 +262,16 @@ void net_nice(const char* const action, const char* const jid) {
 	xmpp_stanza_set_name(_key64, "key64");
 	switch (act) {
 		case NICE_AC_REQUEST:
-			xmpp_stanza_set_attribute(_key64, "value", key64);
+			//just before send a request action, set the nice agent
+			setting_connection();
+			xmpp_stanza_set_attribute(_key64, "value", strdup(getMyKey()));
 			setOtherJid(jid);
 			break;
 		case NICE_AC_ACCEPTED:
-			xmpp_stanza_set_attribute(_key64, "value", key64);
+			//just before send an accoet request, set the nice agent
+			controlling_state=0;
+			setting_connection();
+			xmpp_stanza_set_attribute(_key64, "value", strdup(getMyKey()));
 			break;
 		case NICE_AC_DENIED:
 			xmpp_stanza_set_attribute(_key64, "value", "");
