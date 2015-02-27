@@ -1,6 +1,6 @@
 #include "main.h"
 #include "io.h"
-#include "li.h"
+//#include "li.h"
 #include "net.h"
 #include "nice.h"
 #include "msg.h"
@@ -29,7 +29,7 @@ static void* _thread_nice(void *data) {
 
 static void* _thread_xmpp(void *data) {
 	io_init();
-	li_init();
+	//li_init();
 	msg_init();
 	net_init();
 	while (prog_running) {
@@ -39,7 +39,7 @@ static void* _thread_xmpp(void *data) {
 	io_printfln("Exiting...");
 	net_deinit();
 	msg_deinit();
-	li_deinit();
+	//li_deinit();
 	io_deinit();
 	return 0;
 }

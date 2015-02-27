@@ -82,6 +82,23 @@ int handle_roster_reply(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza,
 	return 0;
 }
 
+//char *xmpp_jid_bare(xmpp_ctx_t *ctx, const char *jid)
+// {
+//  char *result;
+//  const char *c;
+//
+//  c = strchr(jid, '/');
+//  if (c == NULL) return xmpp_strdup(ctx, jid);
+//
+//  result = xmpp_alloc(ctx, c-jid+1);
+//  if (result != NULL) {
+//  memcpy(result, jid, c-jid);
+//  result[c-jid] = '\0';
+//  }
+//
+//  return result;
+// }
+
 //int handle_message(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza,
 //		void * const userdata) {
 //	char* from;
