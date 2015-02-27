@@ -82,28 +82,28 @@ int handle_roster_reply(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza,
 	return 0;
 }
 
-int handle_message(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza,
-		void * const userdata) {
-	char* from;
-	char *intext;
-	msg_queue_t* q;
-
-	if (!xmpp_stanza_get_child_by_name(stanza, "body"))
-		return 1;
-	if (!strcmp(xmpp_stanza_get_attribute(stanza, "type"), "error"))
-		return 1;
-	//nice message, do not handle this
-	if (!strcmp(xmpp_stanza_get_attribute(stanza, "type"), "nice"))
-			return 1;
-	intext = xmpp_stanza_get_text(
-			xmpp_stanza_get_child_by_name(stanza, "body"));
-	from = xmpp_jid_bare(ctx, xmpp_stanza_get_attribute(stanza, "from"));
-	q = msg_queue_get(from);
-	xmpp_free(ctx, from);
-	msg_queue_write(q, intext);
-	xmpp_free(ctx, intext);
-	return 1;
-}
+//int handle_message(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza,
+//		void * const userdata) {
+//	char* from;
+//	char *intext;
+//	msg_queue_t* q;
+//
+//	if (!xmpp_stanza_get_child_by_name(stanza, "body"))
+//		return 1;
+//	if (!strcmp(xmpp_stanza_get_attribute(stanza, "type"), "error"))
+//		return 1;
+//	//nice message, do not handle this
+//	if (!strcmp(xmpp_stanza_get_attribute(stanza, "type"), "nice"))
+//			return 1;
+//	intext = xmpp_stanza_get_text(
+//			xmpp_stanza_get_child_by_name(stanza, "body"));
+//	from = xmpp_jid_bare(ctx, xmpp_stanza_get_attribute(stanza, "from"));
+//	q = msg_queue_get(from);
+//	xmpp_free(ctx, from);
+//	msg_queue_write(q, intext);
+//	xmpp_free(ctx, intext);
+//	return 1;
+//}
 int handle_presence(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza,
 		void * const userdata) {
 	
@@ -346,7 +346,7 @@ static void conn_handler(xmpp_conn_t * const _conn,
 
 		xmpp_handler_add(_conn, handle_version, "jabber:iq:version", "iq", NULL,ctx);
 		xmpp_handler_add(_conn, handle_nice, NULL, "message", "nice",ctx);
-		xmpp_handler_add(_conn, handle_message, NULL, "message", NULL, ctx);
+//		xmpp_handler_add(_conn, handle_message, NULL, "message", NULL, ctx);
 //		xmpp_handler_add(_conn, handle_roster_reply,XMPP_NS_ROSTER, "iq",NULL, ctx);
 //		xmpp_handler_add(_conn, handle_presence, NULL, "presence", NULL, ctx );
 

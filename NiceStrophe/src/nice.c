@@ -367,7 +367,7 @@ int setControllingState(int newState) {
 /**
  * Funzioni Nice
  */
-static void cb_candidate_gathering_done(NiceAgent *agent, guint stream_id,
+void cb_candidate_gathering_done(NiceAgent *agent, guint stream_id,
 		gpointer data) {
 	io_notification("SIGNAL candidate gathering done");
 	g_mutex_lock(&gather_mutex);
@@ -376,7 +376,7 @@ static void cb_candidate_gathering_done(NiceAgent *agent, guint stream_id,
 	g_mutex_unlock(&gather_mutex);
 }
 
-static void cb_component_state_changed(NiceAgent *agent, guint stream_id,
+void cb_component_state_changed(NiceAgent *agent, guint stream_id,
 		guint component_id, guint state, gpointer data) {
 	io_notification("SIGNAL: state changed %d %d %s[%d]", stream_id,
 			component_id, state_name[state], state);
@@ -390,14 +390,14 @@ static void cb_component_state_changed(NiceAgent *agent, guint stream_id,
 	}
 }
 
-static void cb_nice_recv(NiceAgent *agent, guint stream_id, guint component_id,
+void cb_nice_recv(NiceAgent *agent, guint stream_id, guint component_id,
 		guint len, gchar *buf, gpointer data) {
 	if (len == 1 && buf[0] == '\0')
 		g_main_loop_quit(gloop);
 	io_notification("%.*s", len, buf);
 //	fflush(stdout);
 }
-static void cb_new_selected_pair(NiceAgent *agent, guint stream_id,
+void cb_new_selected_pair(NiceAgent *agent, guint stream_id,
 		guint component_id, gchar *lfoundation, gchar *rfoundation,
 		gpointer data) {
 	io_notification("SIGNAL: selected pair %s %s", lfoundation, rfoundation);

@@ -112,14 +112,14 @@ int getControllingState();
 int setControllingState(int newState);
 
 
-static void cb_candidate_gathering_done(NiceAgent *agent, guint stream_id,
+void cb_candidate_gathering_done(NiceAgent *agent, guint stream_id,
     gpointer data);
-static void cb_component_state_changed(NiceAgent *agent, guint stream_id,
+void cb_component_state_changed(NiceAgent *agent, guint stream_id,
     guint component_id, guint state,
     gpointer data);
-static void cb_nice_recv(NiceAgent *agent, guint stream_id, guint component_id,
+void cb_nice_recv(NiceAgent *agent, guint stream_id, guint component_id,
     guint len, gchar *buf, gpointer data);
-static void cb_new_selected_pair(NiceAgent *agent, guint stream_id,guint component_id
+void cb_new_selected_pair(NiceAgent *agent, guint stream_id,guint component_id
 		, gchar *lfoundation,gchar *rfoundation, gpointer data);
 
 #endif /* NICE_H_ */
