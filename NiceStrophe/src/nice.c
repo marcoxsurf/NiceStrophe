@@ -11,16 +11,13 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "main.h"
-//#include <glib.h> incluso in agent.h
 
 #include "tools.h"
 
 #define N_STATE 4
 static const gchar *state_name[] = { "disconnected", "gathering", "connecting",
 		"connected", "ready", "failed" };
-/**
- * Nice
- */
+
 static gchar *stun_addr = NULL;
 static guint stun_port;
 static gchar *port_err = NULL;
@@ -29,9 +26,6 @@ static const char *acceptable[N_STATE] =
 		{ "request", "accept", "denied", "end" };
 static const nice_acceptable_t acceptable_[N_STATE] = { NICE_AC_REQUEST,
 		NICE_AC_ACCEPTED, NICE_AC_DENIED, NICE_AC_END };
-//static char *own_key64, *other_key64, *other_jid;
-
-//static nice_status_t _nice_status=NICE_ST_INIT;
 
 //Nice setting
 static gboolean candidate_gathering_done, negotiation_done;
@@ -93,6 +87,7 @@ void setting_connection() {
 		g_object_set(agent, "stun-server", stun_addr, NULL);
 		g_object_set(agent, "stun-server-port", stun_port, NULL);
 	}
+//	io_notification("controlling is %d",controlling_state);
 	g_object_set(agent, "controlling-mode", controlling_state, NULL);
 	//Connessione ai segnali
 	g_signal_connect(agent, "candidate-gathering-done",
@@ -128,12 +123,12 @@ void setting_connection() {
 		io_notification("Ending thread.");
 		return;
 	}
-	//Fine acquisizione candidati. Stampa dei risultati
+	//Fine acquisizione candidati. Stampa dei risultati nice_agent_parse_remote_sdp()
 	sdp = nice_agent_generate_local_sdp(agent);
 	io_notification("Generated SDP:\n%s", sdp);
 	//	printf("Questa linea deve essere inviata al server di RV:\n");
 	key64 = g_base64_encode((const guchar *) sdp, strlen(sdp));
-	io_notification("\n%s", key64);
+//	io_notification("\n%s", key64);
 	g_free(sdp);
 	nice_info->my_key64 = strdup(key64);
 	g_free(key64);
@@ -374,7 +369,7 @@ int setControllingState(int newState) {
  */
 static void cb_candidate_gathering_done(NiceAgent *agent, guint stream_id,
 		gpointer data) {
-	g_debug("SIGNAL candidate gathering done");
+	io_notification("SIGNAL candidate gathering done");
 	g_mutex_lock(&gather_mutex);
 	candidate_gathering_done = TRUE;
 	g_cond_signal(&gather_cond);
@@ -399,8 +394,7 @@ static void cb_nice_recv(NiceAgent *agent, guint stream_id, guint component_id,
 		guint len, gchar *buf, gpointer data) {
 	if (len == 1 && buf[0] == '\0')
 		g_main_loop_quit(gloop);
-	//TODO controllare ricezioni messaggi nice
-	printf("%.*s", len, buf);
+	io_notification("%.*s", len, buf);
 //	fflush(stdout);
 }
 static void cb_new_selected_pair(NiceAgent *agent, guint stream_id,

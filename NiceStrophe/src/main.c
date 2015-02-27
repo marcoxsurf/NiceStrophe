@@ -57,7 +57,6 @@ int main() {
 	gthread_nice = g_thread_new("_thread_nice", &_thread_nice, NULL);
 	//esegue il loop fino a che non viene chiamato g_main_loop_quit
 	g_main_loop_run(gloop);
-
 	//aspetto che termini
 	g_thread_join(gthread_xmpp);
 	g_thread_join(gthread_nice);

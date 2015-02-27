@@ -112,8 +112,6 @@ int getControllingState();
 int setControllingState(int newState);
 
 
-//static Nice_info* nice_info;
-
 static void cb_candidate_gathering_done(NiceAgent *agent, guint stream_id,
     gpointer data);
 static void cb_component_state_changed(NiceAgent *agent, guint stream_id,
