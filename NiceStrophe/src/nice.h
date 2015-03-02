@@ -7,18 +7,20 @@
 
 #ifndef NICE_H_
 #define NICE_H_
-
+#include "thread_handler.h"
 #include <agent.h>
 
-typedef enum {
-	NICE_ST_IDLE,
-	NICE_ST_WAITING_FOR,
-	NICE_ST_ACCEPTED,
-	NICE_ST_DENIED,
-	NICE_ST_BUSIED,
-	NICE_ST_ENDED,
-	NICE_ST_INIT
-} nice_status_t;
+//typedef enum {
+//	NICE_ST_IDLE,
+//	NICE_ST_SENDING_REQ,
+//	NICE_ST_RECEIVING_REQ,
+//	NICE_ST_WAITING_FOR,
+//	NICE_ST_ACCEPTED,
+//	NICE_ST_DENIED,
+//	NICE_ST_BUSIED,
+//	NICE_ST_ENDED,
+//	NICE_ST_INIT
+//} nice_status_t;
 
 typedef enum{
 	NICE_SEND_REQUEST,
@@ -44,15 +46,6 @@ typedef enum{
 	NICE_SEND
 } nice_action_s;
 
-typedef struct _info {
-	char *my_jid;
-	char *my_key64;
-	char *other_key64;
-	char *other_jid;
-} Nice_info;
-
-int controlling_state;
-
 void nice_nonblock_handle();
 
 void nice_init();
@@ -75,6 +68,8 @@ nice_acceptable_t get_status(const char* const action);
  * Handlers for nice status
  */
 void handleIdleState();
+void handleReceReqState();
+void handleSendReqState();
 void handleWaitingState();
 void handleDeniedState();
 void handleAcceptedState();
@@ -93,23 +88,23 @@ const char* getActionName( nice_acceptable_t action);
 
 void clean_other_var();
 
-void init_struct_nice();
+//void init_struct_nice();
 
-/**
- * return Own key 64
- */
-char* getMyJid();
-char* getMyKey();
-char* getOtherKey();
-char* getOtherJid();
-
-char* setMyJid(char* jid);
-char* setMyKey(char* key64);
-char* setOtherKey(char* otherJ,char* otherK);
-char* setOtherJid(const char* otherJ);
-
-int getControllingState();
-int setControllingState(int newState);
+///**
+// * return Own key 64
+// */
+//char* getMyJid();
+//char* getMyKey();
+//char* getOtherKey();
+//char* getOtherJid();
+//
+//char* setMyJid(char* jid);
+//char* setMyKey(char* key64);
+//char* setOtherKey(char* otherJ,char* otherK);
+//char* setOtherJid(const char* otherJ);
+//
+//int getControllingState();
+//int setControllingState(int newState);
 
 
 void cb_candidate_gathering_done(NiceAgent *agent, guint stream_id,

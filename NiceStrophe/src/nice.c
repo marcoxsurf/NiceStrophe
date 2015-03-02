@@ -28,10 +28,10 @@ static const nice_acceptable_t acceptable_[N_STATE] = { NICE_AC_REQUEST,
 		NICE_AC_ACCEPTED, NICE_AC_DENIED, NICE_AC_END };
 
 //Nice setting
-static gboolean candidate_gathering_done, negotiation_done;
-static GMutex gather_mutex, negotiate_mutex;
-static GCond gather_cond, negotiate_cond;
-NiceAgent *agent;
+//gboolean candidate_gathering_done, negotiation_done;
+//GMutex gather_mutex, negotiate_mutex;
+//GCond gather_cond, negotiate_cond;
+//NiceAgent *agent;
 GIOChannel* io_stdin;
 
 guint stream_id;
@@ -60,7 +60,8 @@ nice_acceptable_t get_status(const char* const action) {
 }
 
 void nice_init() {
-	nice_info = malloc(sizeof(Nice_info));
+//	nice_info = malloc(sizeof(Nice_info));
+	init_struct_nice();
 	char *def_stun_server = "stun.stunprotocol.org";
 	char *def_stun_port = "3478";
 	//solve ip address from url
@@ -71,14 +72,14 @@ void nice_init() {
 		return;
 	}
 	io_notification("Using stun server '[%s]:%u'", stun_addr, stun_port);
-	//setting default controlling state = 1
-	controlling_state = 1;
-	_nice_status = NICE_ST_IDLE;
+	setControllingState(1);
+	setNiceStatus(NICE_ST_IDLE);
 }
 
 void setting_connection() {
 	agent = nice_agent_new(g_main_loop_get_context(gloop),
 			NICE_COMPATIBILITY_RFC5245);
+	candidate_gathering_done=FALSE;
 	//Build agent
 	if (agent == NULL) {
 		io_error("Failed to create the agent");
@@ -100,7 +101,7 @@ void setting_connection() {
 	stream_id = nice_agent_add_stream(agent, 1);
 	if (stream_id == 0) {
 		io_error("Failed to add stream");
-		return;
+		return ;
 	}
 	nice_agent_set_stream_name(agent, stream_id, "text");
 	// Attach to the component to receive the data
@@ -112,8 +113,10 @@ void setting_connection() {
 		io_error("Failed to start candidate gathering");
 	}
 	io_notification("Waiting for candidate-gathering-done signal.");
+	//TODO questa è una pezza
+	//usleep(5*1000*1000);
 	g_mutex_lock(&gather_mutex);
-	while (!prog_running && !candidate_gathering_done) {
+	while (prog_running && !candidate_gathering_done) {
 		g_cond_wait(&gather_cond, &gather_mutex);
 	}
 	g_mutex_unlock(&gather_mutex);
@@ -130,9 +133,11 @@ void setting_connection() {
 	key64 = g_base64_encode((const guchar *) sdp, strlen(sdp));
 //	io_notification("\n%s", key64);
 	g_free(sdp);
-	nice_info->my_key64 = strdup(key64);
+	setMyKey(key64);
+//	nice_info->my_key64 = strdup(key64);
 	g_free(key64);
 //	_nice_status = NICE_ST_IDLE;
+	return;
 }
 
 void nice_deinit() {
@@ -147,7 +152,7 @@ void nice_deinit() {
  */
 int state_machine(nice_action_s s_r, nice_acceptable_t action) {
 	int resp = 0;
-	switch (_nice_status) {
+	switch (getNiceStatus()) {
 	case NICE_ST_INIT:
 		//no action here
 		//wait until communication is ready
@@ -157,16 +162,20 @@ int state_machine(nice_action_s s_r, nice_acceptable_t action) {
 	case NICE_ST_IDLE:
 		//can accept only SEND/RECV Request action
 		if (action == NICE_AC_REQUEST) {
-			_nice_status = NICE_ST_WAITING_FOR;
+			setNiceStatus(NICE_ST_WAITING_FOR);
 			resp = 1;
 		}
 		break;
+	case NICE_ST_SENDING_REQ:
+		break;
+	case NICE_ST_RECEIVING_REQ:
+		break;
 	case NICE_ST_WAITING_FOR:
 		if (action == NICE_AC_ACCEPTED) {
-			_nice_status = NICE_ST_ACCEPTED;
+			setNiceStatus(NICE_ST_ACCEPTED);
 			resp = 1;
 		} else if (action == NICE_AC_DENIED) {
-			_nice_status = NICE_ST_DENIED;
+			setNiceStatus(NICE_ST_DENIED);
 			resp = 1;
 		}
 		break;
@@ -177,7 +186,7 @@ int state_machine(nice_action_s s_r, nice_acceptable_t action) {
 	case NICE_ST_BUSIED:
 		if (action == NICE_AC_END) {
 			resp = 1;
-			_nice_status = NICE_ST_ENDED;
+			setNiceStatus(NICE_ST_ENDED);
 		}
 		break;
 	case NICE_ST_ENDED:
@@ -186,18 +195,24 @@ int state_machine(nice_action_s s_r, nice_acceptable_t action) {
 		break;
 	}
 	if (resp) {
-		io_notification("State changed to %s", getStatusName(_nice_status));
+		io_notification("State changed to %s", getStatusName(getNiceStatus()));
 	}
 	return resp;
 }
 
 void nice_nonblock_handle() {
-	switch (_nice_status) {
+	switch (getNiceStatus()) {
 	case NICE_ST_INIT:
 		nice_init();
 		break;
 	case NICE_ST_IDLE:
 		handleIdleState();
+		break;
+	case NICE_ST_SENDING_REQ:
+		handleSendReqState();
+		break;
+	case NICE_ST_RECEIVING_REQ:
+		handleReceReqState();
 		break;
 	case NICE_ST_WAITING_FOR:
 		handleWaitingState();
@@ -220,23 +235,34 @@ void nice_nonblock_handle() {
 }
 
 void handleIdleState() {
-	//verify if vars are clean
 	//clean_other_var();
+}
+void handleSendReqState() {
+	io_notification("Retrieve nice info for sending request");
+	controlling_state=1;
+//	setting_connection();
+	setNiceStatus(NICE_ST_WAITING_FOR);
+	io_notification("State changed to %s", getStatusName(getNiceStatus()));
+}
+void handleReceReqState() {
+	io_notification("Retrieve nice info for receiving request");
+	controlling_state=0;
+//	setting_connection();
+	setNiceStatus(NICE_ST_WAITING_FOR);
+	io_notification("State changed to %s", getStatusName(getNiceStatus()));
 }
 void handleWaitingState() {
 
 }
 void handleDeniedState() {
-	io_notification("Nice request has been rejected to %s",
-			nice_info->other_jid);	//other_jid);//getOtherJid());
-	_nice_status = NICE_ST_INIT;
-	io_notification("State changed to %s", getStatusName(_nice_status));
+	io_notification("Nice request has been rejected to %s",getOtherJid());
+	setNiceStatus(NICE_ST_INIT);
+	io_notification("State changed to %s", getStatusName(getNiceStatus()));
 }
 void handleAcceptedState() {
-	io_notification("Nice request has been accepted from %s",
-			nice_info->other_jid);
-	_nice_status = NICE_ST_BUSIED;
-	io_notification("State changed to %s", getStatusName(_nice_status));
+	io_notification("Nice request has been accepted from %s",getOtherJid());
+	setNiceStatus(NICE_ST_BUSIED);
+	io_notification("State changed to %s", getStatusName(getNiceStatus()));
 }
 void handleBusyedState() {
 	//todo iniziare qui la comunicazione
@@ -248,61 +274,13 @@ void handleEndedState() {
 	io_notification("Nice trasmission has ended.");
 	clean_other_var();
 	//prog_running=0;
-	_nice_status = NICE_ST_INIT;
-	io_notification("State changed to %s", getStatusName(_nice_status));
+	setNiceStatus(NICE_ST_INIT);
+	io_notification("State changed to %s", getStatusName(getNiceStatus()));
 }
 
 void clean_other_var() {
-	nice_info->other_jid = NULL;
-	nice_info->other_key64 = NULL;
-}
-
-char* getMyJid() {
-	return nice_info->my_jid;
-}
-
-char* getMyKey() {
-	return nice_info->my_key64;
-//	return my_key64;
-}
-
-char* getOtherKey() {
-	return nice_info->other_key64;
-//	return other_key64;
-}
-
-char* getOtherJid() {
-	return nice_info->other_jid;
-//	return other_jid;
-}
-
-char* setMyJid(char* jid) {
-	nice_info->my_jid = strdup(jid);
-	return nice_info->my_jid;
-}
-char* setMyKey(char* key64) {
-	nice_info->my_key64 = strdup(key64);
-	return nice_info->my_key64;
-}
-
-char* setOtherKey(char* otherJ, char* otherK) {
-	//know for sure that key corrispond to jid
-	if (strcmp(otherJ, getOtherJid()) == 0) {
-		nice_info->other_key64 = strdup(otherK);
-//		other_key64=strdup(otherK);
-//		io_notification("Change other key to %s",nice_info->other_key64);
-//		io_notification("Change other key to %s",other_key64);
-	}
-	return nice_info->other_key64;
-//	return other_key64;
-}
-char* setOtherJid(const char* otherJ) {
-	if (_nice_status == NICE_ST_IDLE) {
-		nice_info->other_jid = strdup(otherJ);
-//		other_jid=strdup(otherJ);
-	}
-	return nice_info->other_jid;
-//	return other_jid;
+	setOtherJid(NULL);
+	setOtherKey(NULL,NULL);
 }
 
 const char* getStatusName(nice_status_t status) {
@@ -344,29 +322,6 @@ const char* getActionName(nice_acceptable_t action) {
 	return "";
 }
 
-void init_struct_nice() {
-	nice_info = malloc(sizeof(Nice_info));
-//	nice_info->my_jid=malloc(sizeof(char)*255);
-//	nice_info->my_key64=malloc(sizeof(char)*1255);
-//	nice_info->other_key64=malloc(sizeof(char)*255);
-//	nice_info->other_jid=malloc(sizeof(char)*1255);
-//	my_jid=strdup("");
-//	my_key64=strdup("");
-//	other_key64=strdup("");
-//	other_jid=strdup("");
-}
-
-int getControllingState() {
-	return controlling_state;
-}
-int setControllingState(int newState) {
-	controlling_state = newState;
-	return controlling_state;
-}
-
-/**
- * Funzioni Nice
- */
 void cb_candidate_gathering_done(NiceAgent *agent, guint stream_id,
 		gpointer data) {
 	io_notification("SIGNAL candidate gathering done");
