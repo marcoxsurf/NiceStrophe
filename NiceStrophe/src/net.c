@@ -13,6 +13,12 @@
 static xmpp_ctx_t *ctx = NULL;
 static xmpp_conn_t *conn = NULL;
 
+GThread *gExecThread;
+static GMutex execMutex;
+static GCond execCond;
+static gboolean execDone;
+static void * execThread(void *data);
+
 int handle_version(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza,
 		void * const userdata) {
 	xmpp_stanza_t *reply, *query, *name, *version, *text;
@@ -241,6 +247,7 @@ void net_send(const char* const str) {
 void net_nice(const char* const action, const char* const jid) {
 	//char* key64 = strdup(getMyKey());
 	xmpp_stanza_t *msg, *body, *_nice, *_action, *_key64;//, *_jid;//, *text;
+
 	nice_acceptable_t act=NICE_AC_NO;
 
 	if (!conn) {
@@ -278,15 +285,24 @@ void net_nice(const char* const action, const char* const jid) {
 	_key64=xmpp_stanza_new(ctx);
 	xmpp_stanza_set_name(_key64, "key64");
 	switch (act) {
-		case NICE_AC_REQUEST:
+		case NICE_AC_REQUEST :
 			//just before send a request action, set the nice agent
+			//call another thread to calculate right paramater for nice connection
+			//and wait for the mutex and condition to occur
+//			gExecThread= g_thread_new("exec_setting_connection",&execThread,NULL);
+//			g_mutex_lock(&execMutex);
+//			while(!execDone){
+//				g_cond_wait(&execCond,&execMutex);
+//			}
+//			g_mutex_unlock(&execMutex);
+////			g_thread_join(gExecThread);
 			setting_connection();
 			xmpp_stanza_set_attribute(_key64, "value", strdup(getMyKey()));
 			setOtherJid(jid);
 			break;
 		case NICE_AC_ACCEPTED:
 			//just before send an accoet request, set the nice agent
-			controlling_state=0;
+			setControllingState(0);
 			setting_connection();
 			xmpp_stanza_set_attribute(_key64, "value", strdup(getMyKey()));
 			break;
@@ -445,6 +461,18 @@ void net_deinit() {
 	net_disconnect();
 	xmpp_ctx_free(ctx);
 	xmpp_shutdown();
+}
+
+/**
+ * Exec setting connection implementing mutex and wait condition
+ */
+static void * execThread(void *data){
+	g_mutex_lock(&execMutex);
+	setting_connection();
+	g_cond_signal(&execCond);
+	execDone=TRUE;
+	g_mutex_unlock(&execMutex);
+	return 0;
 }
 
 void net_nonblock_handle() {
