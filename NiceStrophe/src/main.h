@@ -1,6 +1,7 @@
 /* globals */
 #include "nice.h"
 #include "thread_handler.h"
+#include <strophe.h>
 
 extern const char* const prog_version;
 extern const char* const prog_name;

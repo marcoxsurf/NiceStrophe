@@ -27,13 +27,6 @@ static const char *acceptable[N_STATE] =
 static const nice_acceptable_t acceptable_[N_STATE] = { NICE_AC_REQUEST,
 		NICE_AC_ACCEPTED, NICE_AC_DENIED, NICE_AC_END };
 
-//Nice setting
-//gboolean candidate_gathering_done, negotiation_done;
-//GMutex gather_mutex, negotiate_mutex;
-//GCond gather_cond, negotiate_cond;
-//NiceAgent *agent;
-GIOChannel* io_stdin;
-
 guint stream_id;
 gchar *line = NULL;
 gchar *sdp, *sdp64, *key64;
@@ -60,7 +53,6 @@ nice_acceptable_t get_status(const char* const action) {
 }
 
 void nice_init() {
-//	nice_info = malloc(sizeof(Nice_info));
 	init_struct_nice();
 	char *def_stun_server = "stun.stunprotocol.org";
 	char *def_stun_port = "3478";
@@ -73,6 +65,7 @@ void nice_init() {
 	}
 	io_notification("Using stun server '[%s]:%u'", stun_addr, stun_port);
 	setControllingState(1);
+	candidate_gathering_done=FALSE;
 	setNiceStatus(NICE_ST_IDLE);
 }
 
@@ -87,7 +80,7 @@ void setting_connection() {
 		g_object_set(agent, "stun-server", stun_addr, NULL);
 		g_object_set(agent, "stun-server-port", stun_port, NULL);
 	}
-//	io_notification("controlling is %d",controlling_state);
+	io_notification("controlling is %d",controlling_state);
 	g_object_set(agent, "controlling-mode", getControllingState(), NULL);
 	//Connessione ai segnali
 	g_signal_connect(agent, "candidate-gathering-done",
@@ -249,6 +242,7 @@ void handleEndedState() {
 }
 
 void clean_other_var() {
+	setMyKey(NULL);
 	setOtherJid(NULL);
 	setOtherKey(NULL,NULL);
 }
@@ -266,7 +260,7 @@ const char* getStatusName(nice_status_t status) {
 	case NICE_ST_BUSIED:
 		return "Busied";
 	case NICE_ST_ENDED:
-		return "Idle";
+		return "Ended";
 	case NICE_ST_INIT:
 		return "Init";
 	default:

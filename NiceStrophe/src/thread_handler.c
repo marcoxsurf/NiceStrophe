@@ -10,7 +10,9 @@
 
 void init_struct_nice() {
 	g_mutex_lock (&nice_info_gmutex);
-	nice_info = malloc(sizeof(Nice_info));
+	nice_info->my_key64=NULL;
+	nice_info->other_jid=NULL;
+	nice_info->other_key64=NULL;
 	g_mutex_unlock(&nice_info_gmutex);
 }
 

@@ -281,7 +281,7 @@ void net_nice(const char* const action, const char* const jid) {
 	_action=xmpp_stanza_new(ctx);
 	xmpp_stanza_set_name(_action, "action");
 	xmpp_stanza_set_type(_action, action);
-	xmpp_stanza_set_attribute(_action, "from",nice_info->my_jid);
+	xmpp_stanza_set_attribute(_action, "from",getMyJid());
 	_key64=xmpp_stanza_new(ctx);
 	xmpp_stanza_set_name(_key64, "key64");
 	switch (act) {
@@ -308,8 +308,6 @@ void net_nice(const char* const action, const char* const jid) {
 	xmpp_stanza_add_child(_nice, _action);
 	xmpp_stanza_add_child(_nice, _key64);
 	xmpp_stanza_add_child(body, _nice);
-
-
 	xmpp_stanza_add_child(msg, body);
 	//set nice session status
 	//check if status change correct
@@ -325,7 +323,7 @@ void net_nice(const char* const action, const char* const jid) {
 static void connected(xmpp_conn_t* const conn) {
 	const char* full_jid = xmpp_conn_get_bound_jid(conn);
 	roster_init();
-	nice_info->my_jid=strdup(xmpp_conn_get_jid(conn));
+	setMyJid(strdup(xmpp_conn_get_jid(conn)));
 	io_notification("Connected as `%s'.", full_jid);
 	io_prompt_set(NET_ST_ONLINE);
 }

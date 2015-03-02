@@ -223,7 +223,6 @@ void io_getpass_func(void* d) {
 	char* pass;
 	pass = getpass("password: ");
 	*ret = strdup(pass);
-	//rl_already_prompted = true;
 }
 
 char* io_getpass() {
