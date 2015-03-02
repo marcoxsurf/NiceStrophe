@@ -68,8 +68,6 @@ nice_acceptable_t get_status(const char* const action);
  * Handlers for nice status
  */
 void handleIdleState();
-void handleReceReqState();
-void handleSendReqState();
 void handleWaitingState();
 void handleDeniedState();
 void handleAcceptedState();

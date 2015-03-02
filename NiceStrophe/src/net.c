@@ -286,16 +286,6 @@ void net_nice(const char* const action, const char* const jid) {
 	xmpp_stanza_set_name(_key64, "key64");
 	switch (act) {
 		case NICE_AC_REQUEST :
-			//just before send a request action, set the nice agent
-			//call another thread to calculate right paramater for nice connection
-			//and wait for the mutex and condition to occur
-//			gExecThread= g_thread_new("exec_setting_connection",&execThread,NULL);
-//			g_mutex_lock(&execMutex);
-//			while(!execDone){
-//				g_cond_wait(&execCond,&execMutex);
-//			}
-//			g_mutex_unlock(&execMutex);
-////			g_thread_join(gExecThread);
 			setting_connection();
 			xmpp_stanza_set_attribute(_key64, "value", strdup(getMyKey()));
 			setOtherJid(jid);

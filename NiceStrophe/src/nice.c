@@ -79,7 +79,6 @@ void nice_init() {
 void setting_connection() {
 	agent = nice_agent_new(g_main_loop_get_context(gloop),
 			NICE_COMPATIBILITY_RFC5245);
-	candidate_gathering_done=FALSE;
 	//Build agent
 	if (agent == NULL) {
 		io_error("Failed to create the agent");
@@ -89,7 +88,7 @@ void setting_connection() {
 		g_object_set(agent, "stun-server-port", stun_port, NULL);
 	}
 //	io_notification("controlling is %d",controlling_state);
-	g_object_set(agent, "controlling-mode", controlling_state, NULL);
+	g_object_set(agent, "controlling-mode", getControllingState(), NULL);
 	//Connessione ai segnali
 	g_signal_connect(agent, "candidate-gathering-done",
 			G_CALLBACK(cb_candidate_gathering_done), NULL);
@@ -113,8 +112,6 @@ void setting_connection() {
 		io_error("Failed to start candidate gathering");
 	}
 	io_notification("Waiting for candidate-gathering-done signal.");
-	//TODO questa è una pezza
-	//usleep(5*1000*1000);
 	g_mutex_lock(&gather_mutex);
 	while (prog_running && !candidate_gathering_done) {
 		g_cond_wait(&gather_cond, &gather_mutex);
@@ -131,12 +128,9 @@ void setting_connection() {
 	io_notification("Generated SDP:\n%s", sdp);
 	//	printf("Questa linea deve essere inviata al server di RV:\n");
 	key64 = g_base64_encode((const guchar *) sdp, strlen(sdp));
-//	io_notification("\n%s", key64);
 	g_free(sdp);
 	setMyKey(key64);
-//	nice_info->my_key64 = strdup(key64);
 	g_free(key64);
-//	_nice_status = NICE_ST_IDLE;
 	return;
 }
 
@@ -165,10 +159,6 @@ int state_machine(nice_action_s s_r, nice_acceptable_t action) {
 			setNiceStatus(NICE_ST_WAITING_FOR);
 			resp = 1;
 		}
-		break;
-	case NICE_ST_SENDING_REQ:
-		break;
-	case NICE_ST_RECEIVING_REQ:
 		break;
 	case NICE_ST_WAITING_FOR:
 		if (action == NICE_AC_ACCEPTED) {
@@ -208,12 +198,6 @@ void nice_nonblock_handle() {
 	case NICE_ST_IDLE:
 		handleIdleState();
 		break;
-	case NICE_ST_SENDING_REQ:
-		handleSendReqState();
-		break;
-	case NICE_ST_RECEIVING_REQ:
-		handleReceReqState();
-		break;
 	case NICE_ST_WAITING_FOR:
 		handleWaitingState();
 		break;
@@ -237,20 +221,6 @@ void nice_nonblock_handle() {
 void handleIdleState() {
 	//clean_other_var();
 }
-void handleSendReqState() {
-	io_notification("Retrieve nice info for sending request");
-	controlling_state=1;
-//	setting_connection();
-	setNiceStatus(NICE_ST_WAITING_FOR);
-	io_notification("State changed to %s", getStatusName(getNiceStatus()));
-}
-void handleReceReqState() {
-	io_notification("Retrieve nice info for receiving request");
-	controlling_state=0;
-//	setting_connection();
-	setNiceStatus(NICE_ST_WAITING_FOR);
-	io_notification("State changed to %s", getStatusName(getNiceStatus()));
-}
 void handleWaitingState() {
 
 }
@@ -272,7 +242,7 @@ void handleBusyedState() {
 }
 void handleEndedState() {
 	io_notification("Nice trasmission has ended.");
-	clean_other_var();
+//	clean_other_var();
 	//prog_running=0;
 	setNiceStatus(NICE_ST_INIT);
 	io_notification("State changed to %s", getStatusName(getNiceStatus()));
