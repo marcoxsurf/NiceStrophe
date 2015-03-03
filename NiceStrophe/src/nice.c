@@ -322,7 +322,7 @@ void negotiate(){
 	}
 	g_mutex_unlock(&negotiate_mutex);
 	if (!prog_running){
-		g_object_unref(agent);
+//		g_object_unref(agent);
 		io_notification("Ending thread.");
 		g_main_loop_quit(gloop);
 		return;
