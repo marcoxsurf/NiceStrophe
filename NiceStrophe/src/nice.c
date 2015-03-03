@@ -4,15 +4,16 @@
  *  Created on: 03/feb/2015
  *      Author: marco
  */
-#include "nice.h"
-#include <string.h>
-#include "io.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "main.h"
+#include <string.h>
 
+#include "io.h"
+#include "nice.h"
+#include "main.h"
 #include "tools.h"
+#include "nice_action.h"
 
 #define N_STATE 4
 static const gchar *state_name[] = { "disconnected", "gathering", "connecting",
@@ -27,8 +28,7 @@ static const char *acceptable[N_STATE] =
 static const nice_acceptable_t acceptable_[N_STATE] = { NICE_AC_REQUEST,
 		NICE_AC_ACCEPTED, NICE_AC_DENIED, NICE_AC_END };
 
-guint stream_id;
-gchar *line = NULL;
+//gchar *line = NULL;
 gchar *sdp, *sdp64, *key64;
 
 nice_acceptable_t action_is_correct(const char* const action) {
@@ -65,12 +65,13 @@ void nice_init() {
 	}
 	io_notification("Using stun server '[%s]:%u'", stun_addr, stun_port);
 	setControllingState(1);
-	candidate_gathering_done=FALSE;
+//	candidate_gathering_done=FALSE;
 	setNiceStatus(NICE_ST_IDLE);
 }
 
 void setting_connection() {
-	agent = nice_agent_new(g_main_loop_get_context(gloop),
+	NiceAgent *agent;
+	agent= nice_agent_new(g_main_loop_get_context(gloop),
 			NICE_COMPATIBILITY_RFC5245);
 	//Build agent
 	if (agent == NULL) {
@@ -124,11 +125,12 @@ void setting_connection() {
 	g_free(sdp);
 	setMyKey(key64);
 	g_free(key64);
+	setAgent(agent);
 	return;
 }
 
 void nice_deinit() {
-	if (agent!=NULL){
+	if (getAgent()!=NULL){
 		g_object_unref(agent);
 	}
 	g_main_loop_quit(gloop);
@@ -229,9 +231,22 @@ void handleAcceptedState() {
 }
 void handleBusyedState() {
 	//todo iniziare qui la comunicazione
-	io_notification("Busied");
-	sleep(10);
-
+	//1 - avvio un thread per la comunicazione tra i due
+	//2^ prova - invio file
+	//creo il thread e rimane in attesa finchè non termina
+	GThread *niceThread;
+	niceThread = g_thread_new("nice_action_thread", &text_thread,NULL);
+//	g_thread_join(niceThread);
+	g_mutex_lock(&thread_mutex);
+	while(!thread_has_done){
+		g_cond_wait(&thread_cond,&thread_mutex);
+	}
+	g_mutex_unlock(&thread_mutex);
+//	io_notification("Busied");
+//	sleep(10);
+	//thread ended;
+	//--> Ended in auto
+	setNiceStatus(NICE_ST_ENDED);
 }
 void handleEndedState() {
 	io_notification("Nice trasmission has ended.");
@@ -285,6 +300,33 @@ const char* getActionName(nice_acceptable_t action) {
 	}
 	return "";
 }
+
+void negotiate(){
+	gchar *sdp;
+	gsize sdp_len;
+	NiceAgent *agent;
+	agent=getAgent();
+	sdp = (gchar *) g_base64_decode(getOtherKey(),&sdp_len);
+	if (!(sdp && nice_agent_parse_remote_sdp(agent,sdp)>0)){
+		io_error("Failed to parse remote data");
+		setNiceStatus(NICE_ST_ENDED);
+		return;
+	}
+	io_notification("Waiting for state READY or FAILED signal...");
+	g_mutex_lock(&negotiate_mutex);
+	while(prog_running && !negotiation_done){
+		g_cond_wait(&negotiate_cond,&negotiate_mutex);
+	}
+	g_mutex_unlock(&negotiate_mutex);
+	if (!prog_running){
+		g_object_unref(agent);
+		io_notification("Ending thread.");
+		g_main_loop_quit(gloop);
+	}
+	setAgent(agent);
+	io_notification("Negotiate ended, Nodes are connected now :D");
+}
+
 
 void cb_candidate_gathering_done(NiceAgent *agent, guint stream_id,
 		gpointer data) {

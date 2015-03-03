@@ -9,6 +9,7 @@
 #define THREAD_HANDLER_H_
 
 #include <glib-2.0/glib.h>
+#include <agent.h>
 
 typedef struct _info {
 	char *my_jid;
@@ -32,7 +33,7 @@ nice_status_t _nice_status;
 int controlling_state;
 
 
-GMutex nice_info_gmutex, controlling_state_mutex, nice_status_mutex;
+GMutex nice_info_gmutex, controlling_state_mutex, nice_status_mutex, agent_mutex;
 
 void init_struct_nice();
 char* getMyJid();
@@ -50,5 +51,8 @@ int setControllingState(int newState);
 
 nice_status_t getNiceStatus();
 nice_status_t setNiceStatus(nice_status_t new_state);
+
+NiceAgent* getAgent();
+void setAgent(NiceAgent *newAgent);
 
 #endif /* THREAD_HANDLER_H_ */

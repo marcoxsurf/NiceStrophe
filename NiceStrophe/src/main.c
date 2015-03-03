@@ -65,5 +65,3 @@ int main() {
 	g_main_loop_unref(gloop);
 	return EXIT_SUCCESS;
 }
-
-

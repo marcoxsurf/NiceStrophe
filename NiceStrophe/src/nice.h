@@ -46,6 +46,8 @@ typedef enum{
 	NICE_SEND
 } nice_action_s;
 
+guint stream_id;
+
 void nice_nonblock_handle();
 
 void nice_init();
@@ -86,23 +88,7 @@ const char* getActionName( nice_acceptable_t action);
 
 void clean_other_var();
 
-//void init_struct_nice();
-
-///**
-// * return Own key 64
-// */
-//char* getMyJid();
-//char* getMyKey();
-//char* getOtherKey();
-//char* getOtherJid();
-//
-//char* setMyJid(char* jid);
-//char* setMyKey(char* key64);
-//char* setOtherKey(char* otherJ,char* otherK);
-//char* setOtherJid(const char* otherJ);
-//
-//int getControllingState();
-//int setControllingState(int newState);
+void negotiate();
 
 
 void cb_candidate_gathering_done(NiceAgent *agent, guint stream_id,

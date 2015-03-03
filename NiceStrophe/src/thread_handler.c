@@ -5,6 +5,7 @@
  *      Author: marco
  */
 #include "thread_handler.h"
+#include "main.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -125,3 +126,15 @@ nice_status_t setNiceStatus(nice_status_t new_state){
 	return ret;
 }
 
+NiceAgent* getAgent(){
+	NiceAgent *ret;
+	g_mutex_lock(&agent_mutex);
+	ret=agent;
+	g_mutex_unlock(&agent_mutex);
+	return ret;
+}
+void setAgent(NiceAgent *newAgent){
+	g_mutex_lock(&agent_mutex);
+	agent=newAgent;
+	g_mutex_unlock(&agent_mutex);
+}
