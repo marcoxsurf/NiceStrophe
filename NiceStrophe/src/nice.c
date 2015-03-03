@@ -235,8 +235,10 @@ void handleBusyedState() {
 	//2^ prova - invio file
 	//creo il thread e rimane in attesa finchè non termina
 	GThread *niceThread;
+	thread_has_done=FALSE;
 	niceThread = g_thread_new("nice_action_thread", &text_thread,NULL);
 //	g_thread_join(niceThread);
+
 	g_mutex_lock(&thread_mutex);
 	while(!thread_has_done){
 		g_cond_wait(&thread_cond,&thread_mutex);
