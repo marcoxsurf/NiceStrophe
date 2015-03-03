@@ -81,7 +81,6 @@ void setting_connection() {
 		g_object_set(agent, "stun-server", stun_addr, NULL);
 		g_object_set(agent, "stun-server-port", stun_port, NULL);
 	}
-	io_notification("controlling is %d",controlling_state);
 	g_object_set(agent, "controlling-mode", getControllingState(), NULL);
 	//Connessione ai segnali
 	g_signal_connect(agent, "candidate-gathering-done",
@@ -235,7 +234,9 @@ void handleBusyedState() {
 	//2^ prova - invio file
 	//creo il thread e rimane in attesa finchè non termina
 	GThread *niceThread;
+	g_mutex_lock(&thread_mutex);
 	thread_has_done=FALSE;
+	g_mutex_unlock(&thread_mutex);
 	niceThread = g_thread_new("nice_action_thread", &text_thread,NULL);
 //	g_thread_join(niceThread);
 
@@ -324,6 +325,7 @@ void negotiate(){
 		g_object_unref(agent);
 		io_notification("Ending thread.");
 		g_main_loop_quit(gloop);
+		return;
 	}
 	setAgent(agent);
 	io_notification("Negotiate ended, Nodes are connected now :D");
