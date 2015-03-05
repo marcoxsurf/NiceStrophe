@@ -38,9 +38,9 @@ void * text_thread(void *data){
 	//send CTRL-D to terminate
 //	nice_agent_send(agent, stream_id,1,1,"\0");
 
-	g_mutex_lock(&thread_mutex);
-	thread_has_done = TRUE;
-	g_cond_signal(&thread_cond);
-	g_mutex_unlock(&thread_mutex);
+//	g_mutex_lock(&thread_mutex);
+//	thread_has_done = TRUE;
+//	g_cond_signal(&thread_cond);
+//	g_mutex_unlock(&thread_mutex);
 	return 0;
 }

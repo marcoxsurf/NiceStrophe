@@ -454,14 +454,14 @@ void net_deinit() {
 /**
  * Exec setting connection implementing mutex and wait condition
  */
-static void * execThread(void *data){
-	g_mutex_lock(&execMutex);
-	setting_connection();
-	g_cond_signal(&execCond);
-	execDone=TRUE;
-	g_mutex_unlock(&execMutex);
-	return 0;
-}
+//static void * execThread(void *data){
+//	g_mutex_lock(&execMutex);
+//	setting_connection();
+//	g_cond_signal(&execCond);
+//	execDone=TRUE;
+//	g_mutex_unlock(&execMutex);
+//	return 0;
+//}
 
 void net_nonblock_handle() {
 	if (conn) {

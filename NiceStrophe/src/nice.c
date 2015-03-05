@@ -52,10 +52,25 @@ nice_acceptable_t get_status(const char* const action) {
 	return NICE_AC_NO;
 }
 
+void reset_signal(){
+	//set to false gathering signal
+	g_mutex_lock(&gather_mutex);
+	g_mutex_lock(&negotiate_mutex);
+	g_mutex_lock(&thread_mutex);
+	candidate_gathering_done = FALSE;
+	negotiation_done = FALSE;
+	thread_has_done = FALSE;
+	g_mutex_unlock(&gather_mutex);
+	g_mutex_unlock(&negotiate_mutex);
+	g_mutex_unlock(&thread_mutex);
+}
+
 void nice_init() {
 	init_struct_nice();
+	reset_signal();
 	char *def_stun_server = "stun.stunprotocol.org";
 	char *def_stun_port = "3478";
+
 	//solve ip address from url
 	stun_addr = hostname_to_ip(def_stun_server, def_stun_port);
 	stun_port = strtoul(def_stun_port, &port_err, 10);
@@ -234,17 +249,15 @@ void handleBusyedState() {
 	//2^ prova - invio file
 	//creo il thread e rimane in attesa finchè non termina
 	GThread *niceThread;
-	g_mutex_lock(&thread_mutex);
-	thread_has_done=FALSE;
-	g_mutex_unlock(&thread_mutex);
 	niceThread = g_thread_new("nice_action_thread", &text_thread,NULL);
-//	g_thread_join(niceThread);
-
+////	g_thread_join(niceThread);
+//
 	g_mutex_lock(&thread_mutex);
 	while(!thread_has_done){
 		g_cond_wait(&thread_cond,&thread_mutex);
 	}
 	g_mutex_unlock(&thread_mutex);
+	//text_thread(NULL);
 //	io_notification("Busied");
 //	sleep(10);
 	//thread ended;
@@ -357,10 +370,14 @@ void cb_component_state_changed(NiceAgent *agent, guint stream_id,
 
 void cb_nice_recv(NiceAgent *agent, guint stream_id, guint component_id,
 		guint len, gchar *buf, gpointer data) {
+	//if received \0 quit the program
 	if (len == 1 && buf[0] == '\0')
 		g_main_loop_quit(gloop);
-	io_notification("%.*s", len, buf);
-//	fflush(stdout);
+	io_notification("%.*s",len,buf);
+	g_mutex_lock(&thread_mutex);
+	thread_has_done = TRUE;
+	g_cond_signal(&thread_cond);
+	g_mutex_unlock(&thread_mutex);
 }
 void cb_new_selected_pair(NiceAgent *agent, guint stream_id,
 		guint component_id, gchar *lfoundation, gchar *rfoundation,
