@@ -13,12 +13,6 @@
 static xmpp_ctx_t *ctx = NULL;
 static xmpp_conn_t *conn = NULL;
 
-GThread *gExecThread;
-static GMutex execMutex;
-static GCond execCond;
-static gboolean execDone;
-static void * execThread(void *data);
-
 int handle_version(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza,
 		void * const userdata) {
 	xmpp_stanza_t *reply, *query, *name, *version, *text;
@@ -88,55 +82,21 @@ int handle_roster_reply(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza,
 	return 0;
 }
 
-//char *xmpp_jid_bare(xmpp_ctx_t *ctx, const char *jid)
-// {
-//  char *result;
-//  const char *c;
-//
-//  c = strchr(jid, '/');
-//  if (c == NULL) return xmpp_strdup(ctx, jid);
-//
-//  result = xmpp_alloc(ctx, c-jid+1);
-//  if (result != NULL) {
-//  memcpy(result, jid, c-jid);
-//  result[c-jid] = '\0';
-//  }
-//
-//  return result;
-// }
 
-//int handle_message(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza,
-//		void * const userdata) {
-//	char* from;
-//	char *intext;
-//	msg_queue_t* q;
-//
-//	if (!xmpp_stanza_get_child_by_name(stanza, "body"))
-//		return 1;
-//	if (!strcmp(xmpp_stanza_get_attribute(stanza, "type"), "error"))
-//		return 1;
-//	//nice message, do not handle this
-//	if (!strcmp(xmpp_stanza_get_attribute(stanza, "type"), "nice"))
-//			return 1;
-//	intext = xmpp_stanza_get_text(
-//			xmpp_stanza_get_child_by_name(stanza, "body"));
-//	from = xmpp_jid_bare(ctx, xmpp_stanza_get_attribute(stanza, "from"));
-//	q = msg_queue_get(from);
-//	xmpp_free(ctx, from);
-//	msg_queue_write(q, intext);
-//	xmpp_free(ctx, intext);
-//	return 1;
-//}
 int handle_presence(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza,
 		void * const userdata) {
 	
 	return 1;
 }
+
+/**
+ * Handle all the nice msg received from other jid
+ */
 int handle_nice(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza,
 		void * const userdata) {
 	char* from;
 	char *intext;
-	char *action, *key64;
+	char *action, *key64, *file_size;
 	xmpp_stanza_t *body, *nice, *_action, *_key64;//, *_jid;
 	nice_acceptable_t act;
 	if (!xmpp_stanza_get_child_by_name(stanza, "body"))
@@ -186,9 +146,13 @@ int handle_nice(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza,
 	switch (act) {
 		case NICE_AC_REQUEST:
 			//received a request action
-			//saving jid&key
+			//saving jid,key,file_size
 			setOtherJid(from);
 			setOtherKey(from,key64);
+			file_size = strdup(xmpp_stanza_get_attribute(_action,"file_size"));
+			io_notification("File size is %s",file_size);
+			//convert string to size_t
+			total_byte = strtoimax(file_size, NULL, 10);
 			break;
 		case NICE_AC_ACCEPTED:
 			nice_info->other_key64=strdup(key64);
@@ -243,10 +207,11 @@ void net_send(const char* const str) {
 
 	io_message(xmpp_conn_get_bound_jid(conn), str);
 }
-
+/*
+ * Send nice action to other jid
+ */
 void net_nice(const char* const action, const char* const jid) {
-	//char* key64 = strdup(getMyKey());
-	xmpp_stanza_t *msg, *body, *_nice, *_action, *_key64;//, *_jid;//, *text;
+	xmpp_stanza_t *msg, *body, *_nice, *_action, *_key64;
 
 	nice_acceptable_t act=NICE_AC_NO;
 
@@ -258,7 +223,7 @@ void net_nice(const char* const action, const char* const jid) {
 		io_error("No recipient selected");
 	}
 	/**
-	 * Check if action is acceptable
+	 * Check if action is correct
 	 * request, accept, denied, end
 	 */
 	if ((act=action_is_correct(action))==NICE_AC_NO){
@@ -285,9 +250,15 @@ void net_nice(const char* const action, const char* const jid) {
 	_key64=xmpp_stanza_new(ctx);
 	xmpp_stanza_set_name(_key64, "key64");
 	switch (act) {
-		case NICE_AC_REQUEST :
+		case NICE_AC_REQUEST:
+			setControllingState(1);
 			setting_connection();
 			xmpp_stanza_set_attribute(_key64, "value", strdup(getMyKey()));
+			//Send file dim
+			gchar total_size[255];
+			snprintf(total_size, sizeof total_size, "%zu", total_byte);
+			io_notification("Total size is : %s",total_size);
+			xmpp_stanza_set_attribute(_action, "file_size", total_size);
 			setOtherJid(jid);
 			break;
 		case NICE_AC_ACCEPTED:
@@ -371,8 +342,6 @@ static void conn_handler(xmpp_conn_t * const _conn,
 //		xmpp_handler_add(_conn, handle_roster_reply,XMPP_NS_ROSTER, "iq",NULL, ctx);
 //		xmpp_handler_add(_conn, handle_presence, NULL, "presence", NULL, ctx );
 
-		//todo aggiungere controllo su presenza
-		//todo aggiungere controllo roster
 		pres = xmpp_stanza_new(ctx);
 		xmpp_stanza_set_name(pres, "presence");
 		xmpp_send(_conn, pres);

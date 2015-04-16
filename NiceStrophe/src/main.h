@@ -8,7 +8,7 @@ extern const char* const prog_name;
 extern int prog_running;
 
 GMainLoop *gloop;
-gboolean candidate_gathering_done, negotiation_done;
-GMutex gather_mutex, negotiate_mutex;
-GCond gather_cond, negotiate_cond;
-NiceAgent *agent;
+
+FILE *fileSend, *fileRecv;
+gchar *file_send, *file_recv;
+size_t total_byte, sent_byte, read_byte;

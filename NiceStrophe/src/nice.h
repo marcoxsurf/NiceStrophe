@@ -10,6 +10,8 @@
 #include "thread_handler.h"
 #include <agent.h>
 
+#define CHUNK_SIZE 1024
+
 //typedef enum {
 //	NICE_ST_IDLE,
 //	NICE_ST_SENDING_REQ,
@@ -46,7 +48,24 @@ typedef enum{
 	NICE_SEND
 } nice_action_s;
 
-guint stream_id;
+NiceAgent *agent;
+
+gchar *stun_addr;
+guint stun_port;
+gboolean reliable;
+guint stream_id, component_id ;
+
+gboolean candidate_gathering_done, negotiation_done;
+GMutex gather_mutex, negotiate_mutex, write_mutex;
+GCond gather_cond, negotiate_cond, write_cond;
+gboolean reading_done, stream_open, stream_ready;
+
+guint deadlock_timeout;
+
+//Recent libnice improvements
+GIOStream *io_stream;
+GInputStream *input_stream;
+GOutputStream *output_stream;
 
 void nice_nonblock_handle();
 
@@ -92,13 +111,15 @@ void negotiate();
 
 
 void cb_candidate_gathering_done(NiceAgent *agent, guint stream_id,
-    gpointer data);
-void cb_component_state_changed(NiceAgent *agent, guint stream_id,
-    guint component_id, guint state,
-    gpointer data);
+		gpointer data);
+void cb_new_selected_pair(NiceAgent *agent, guint stream_id, guint component_id,
+		gchar *lfoundation, gchar *rfoundation, gpointer data);
+void cb_component_state_changed(NiceAgent *agent, guint _stream_id,
+		guint component_id, guint state, gpointer user_data);
+void cb_reliable_transport_writable(NiceAgent *agent, guint stream_id,
+		guint component_id, gpointer user_data);
 void cb_nice_recv(NiceAgent *agent, guint stream_id, guint component_id,
-    guint len, gchar *buf, gpointer data);
-void cb_new_selected_pair(NiceAgent *agent, guint stream_id,guint component_id
-		, gchar *lfoundation,gchar *rfoundation, gpointer data);
+		guint len, gchar *buf, gpointer data);
+gboolean cb_timer(gpointer pointer);
 
 #endif /* NICE_H_ */
