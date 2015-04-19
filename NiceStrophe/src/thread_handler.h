@@ -8,7 +8,7 @@
 #ifndef THREAD_HANDLER_H_
 #define THREAD_HANDLER_H_
 
-#include <glib-2.0/glib.h>
+//#include <glib-2.0/glib.h>
 #include <agent.h>
 
 typedef struct _info {

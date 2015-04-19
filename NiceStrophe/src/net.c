@@ -3,6 +3,8 @@
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
+//strtoimax
+#include <inttypes.h>
 #include "io.h"
 #include "main.h"
 #include "util.h"

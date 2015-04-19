@@ -300,7 +300,7 @@ void handleBusyedState() {
 		g_cond_wait(&thread_cond, &thread_mutex);
 	}
 	g_mutex_unlock(&thread_mutex);
-	g_thread_join(&execThread);
+	g_thread_join(execThread);
 	setNiceStatus(NICE_ST_ENDED);
 }
 void handleEndedState() {

@@ -22,7 +22,7 @@ void init(){
 void deinit(){
 	g_cond_clear(&thread_cond);
 	g_mutex_clear(&thread_mutex);
-	g_free(thread_has_done);
+
 }
 
 void * no_thread(void *data){
@@ -110,7 +110,7 @@ gboolean read_stream_cb(GObject *pollable_stream, gpointer _user_data) {
 		g_free(buf);
 		return G_SOURCE_CONTINUE;
 	}
-	printf("Read %d bytes \n", len);
+	printf("Read %lu bytes \n", len);
 	g_assert_no_error(error);
 	printf("Arrived: %s\n", buf);
 	//TODO Save buf to file
@@ -177,7 +177,7 @@ gboolean write_stream_cb(GObject *pollable_stream, gpointer _user_data) {
 
 		/* Update the test’s buffer generation state machine. */
 		sent_byte += len;
-		printf("Sent %d bytes of %d bytes read \n", len, len_file_read);
+		printf("Sent %lu bytes of %lu bytes read \n", len, len_file_read);
 		/* Termination time? */
 		if (sent_byte == total_byte) {
 			g_main_loop_quit(main_loop);
