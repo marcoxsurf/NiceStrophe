@@ -37,7 +37,6 @@ ret:
 }
 
 void cmd_nice_h (const struct cmd_tokenized_node* tokens){
-//	io_printfln("Nice Support is under construction....");
 	char* action;
 	char* jid;
 	ARGGET(action);
@@ -77,8 +76,7 @@ ret:
 void cmd_quit_h(const struct cmd_tokenized_node* tokens) {
 
 	ARGEND;
-
-	prog_running = 0;
+	prog_running = FALSE;
 ret:
 	return;
 }
@@ -206,7 +204,6 @@ struct cmd_descriptor cmd_unread= { "/unread", cmd_unread_h, 0, 0};
 struct cmd_descriptor cmd_select = { "/select", cmd_select_h, 0, cmd_select_complete_h};
 struct cmd_descriptor cmd_quit = { "/quit", cmd_quit_h, 0, 0};
 
-//TODO Inserire ulteriori funzioni per libnice
 struct cmd_descriptor cmd_nice = {"/nice", cmd_nice_h, 0, 0};
 
 

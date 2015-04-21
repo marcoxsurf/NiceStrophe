@@ -305,8 +305,6 @@ void handleBusyedState() {
 }
 void handleEndedState() {
 	io_notification("Nice trasmission has ended.");
-//	clean_other_var();
-	//prog_running=0;
 	setNiceStatus(NICE_ST_INIT);
 	io_notification("State changed to %s", getStatusName(getNiceStatus()));
 }

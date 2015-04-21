@@ -1,6 +1,6 @@
 #include "main.h"
 #include "io.h"
-//#include "li.h"
+#include "li.h"
 #include "net.h"
 #include "nice.h"
 #include "msg.h"
@@ -9,7 +9,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-int prog_running;
 const char* const prog_version = "2.0";
 const char* const prog_author = "Marco Fantasia <fantasia.marco@gmail.com>";
 const char* const prog_name = "NiceStrophe";
@@ -29,7 +28,7 @@ static void* _thread_nice(void *data) {
 
 static void* _thread_xmpp(void *data) {
 	io_init();
-	//li_init();
+	li_init();
 	msg_init();
 	net_init();
 	while (prog_running) {
@@ -39,7 +38,7 @@ static void* _thread_xmpp(void *data) {
 	io_printfln("Exiting...");
 	net_deinit();
 	msg_deinit();
-	//li_deinit();
+	li_deinit();
 	io_deinit();
 	return 0;
 }
@@ -58,7 +57,6 @@ int main() {
 	gthread_nice = g_thread_new("_thread_nice", &_thread_nice, NULL);
 	//esegue il loop fino a che non viene chiamato g_main_loop_quit
 	g_main_loop_run(gloop);
-	prog_running=FALSE;
 	//aspetto che termini
 	g_thread_join(gthread_xmpp);
 	g_thread_join(gthread_nice);

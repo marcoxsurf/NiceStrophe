@@ -23,7 +23,7 @@ static void handle_line_fake(char* line) {
 		}
 		return;
 	}
-	prog_running = 0;
+	prog_running = FALSE;
 
 	rl_set_prompt("");
 	rl_replace_line("", 0);
