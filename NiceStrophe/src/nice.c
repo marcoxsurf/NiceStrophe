@@ -142,7 +142,7 @@ void setting_connection() {
 		io_error("Failed to add stream");
 		return;
 	}
-	nice_agent_set_stream_name(agent, stream_id, "testTcp");
+	nice_agent_set_stream_name(agent, stream_id, "text");
 	// Attach to the component to receive the data
 	// Without this call, candidates cannot be gathered
 	nice_agent_attach_recv(agent, stream_id, 1, g_main_loop_get_context(gloop),
