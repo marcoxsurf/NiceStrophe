@@ -21,6 +21,7 @@ static void* _thread_nice(void *data) {
 	nice_init();
 	while(prog_running){
 		nice_nonblock_handle();
+
 	}
 	nice_deinit();
 	return 0;
@@ -53,10 +54,11 @@ int main() {
 	printf("Type /help for assistance.\n");
 	//Eseguo il main_loop e il thread
 	prog_running=TRUE;
-	gthread_xmpp = g_thread_new("_thread_xmpp", &_thread_xmpp, NULL);
-	gthread_nice = g_thread_new("_thread_nice", &_thread_nice, NULL);
+	gthread_xmpp = spawn_thread("_thread_xmpp", &_thread_xmpp, NULL);
+	gthread_nice = spawn_thread("_thread_nice", &_thread_nice, NULL);
 	//esegue il loop fino a che non viene chiamato g_main_loop_quit
 	g_main_loop_run(gloop);
+	prog_running=FALSE;
 	//aspetto che termini
 	g_thread_join(gthread_xmpp);
 	g_thread_join(gthread_nice);
