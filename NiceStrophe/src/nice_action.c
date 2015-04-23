@@ -11,7 +11,7 @@
 #include "io.h"
 #include "nice.h"
 
-void init(){
+void init() {
 	g_mutex_init(&thread_mutex);
 	g_cond_init(&thread_cond);
 	g_mutex_lock(&thread_mutex);
@@ -19,13 +19,13 @@ void init(){
 	g_mutex_unlock(&thread_mutex);
 }
 
-void deinit(){
+void deinit() {
 	g_cond_clear(&thread_cond);
 	g_mutex_clear(&thread_mutex);
 
 }
 
-void * no_thread(void *data){
+void * no_thread(void *data) {
 	io_notification("Thread");
 	init();
 	g_mutex_lock(&thread_mutex);
@@ -38,17 +38,17 @@ void * no_thread(void *data){
 /**
  * Simple send a text and then terminate
  */
-void * text_thread(void *data){
+void * text_thread(void *data) {
 	gchar *line;
 	init();
 	negotiate();
-	if (getControllingState()){
+	if (getControllingState()) {
 		line = strdup("Sono io il tuo capo");
-	}else {
+	} else {
 		line = strdup("Si padrone");
 	}
 
-	nice_agent_send(agent, stream_id,1,strlen(line),line);
+	nice_agent_send(agent, stream_id, 1, strlen(line), line);
 	g_free(line);
 	//send CTRL-D to terminate
 //	nice_agent_send(agent, stream_id,1,1,"\0");
@@ -61,20 +61,30 @@ void * text_thread(void *data){
 	return NULL;
 }
 
-void * file_thread(void *user_data){
+void * file_thread(void *user_data) {
 	GMainContext *main_context;
 	main_context = g_main_context_new();
 	g_main_context_push_thread_default(main_context);
 	init();
 	//negotiate sdp
 	negotiate();
-	printf("Waiting to be ready to send.....\n");
+	if (getControllingState()) {
+		io_printfln("Waiting to be ready to send.....\n");
+	} else {
+		io_printfln("Waiting to be ready to read.....\n");
+	}
+
 	/*Wait for stream to be writeable*/
 	g_mutex_lock(&write_mutex);
 	while (!(stream_open && stream_ready))
 		g_cond_wait(&write_cond, &write_mutex);
 	g_mutex_unlock(&write_mutex);
-	printf("yeahhh I'm ready to send now\n");
+	if (getControllingState()) {
+		io_printfln("yeahhh I'm ready to send now\n");
+	} else {
+		io_printfln("yeahhh I'm ready to read now\n");
+	}
+
 	if (getControllingState()) {
 		write_thread_gsource_cb(output_stream, user_data);
 	} else {
@@ -97,7 +107,7 @@ gboolean read_stream_cb(GObject *pollable_stream, gpointer _user_data) {
 	gssize len;
 	/* Initialise a receive buffer. */
 	buf_len = CHUNK_SIZE;
-	buf = g_malloc(sizeof(gchar)*buf_len);
+	buf = g_malloc(sizeof(gchar) * buf_len);
 	/* Trim the receive buffer to avoid consuming the ‘done’ message. */
 	buf_len = MIN(buf_len, total_byte - read_byte);
 	/* Try to receive some data. */
@@ -150,7 +160,7 @@ gboolean write_stream_cb(GObject *pollable_stream, gpointer _user_data) {
 	gchar *buf = NULL;
 	gsize buf_len = 0;
 	gssize len;
-	while (sent_byte<total_byte){
+	while (sent_byte < total_byte) {
 		gsize len_file_read;
 		/* Generate a buffer to trasmit. */
 		//BUFFER_SIZE_CONSTANT_SMALL policy
