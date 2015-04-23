@@ -10,7 +10,7 @@
 #include "thread_handler.h"
 #include <agent.h>
 
-#define CHUNK_SIZE 1024
+#define CHUNK_SIZE 512
 
 //typedef enum {
 //	NICE_ST_IDLE,
