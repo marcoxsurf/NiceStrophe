@@ -24,11 +24,11 @@ INCLUDES = -I/usr/local/include -I/usr/local/include/nice -I/usr/local/opt/readl
 # define library paths in addition to /usr/lib
 #   if I wanted to include libraries not in /usr/lib I'd specify
 #   their path using -Lpath, something like:
-LFLAGS_MAC = -L$(PWD)/ -L/usr/local/opt/readline/lib
+LFLAGS_MAC = -L$(PWD)/ -L/usr/local/opt/readline/lib -L/usr/local/lib/
 
 LFLAGS_LNX = -L$(PWD)/ -L/usr/local/lib64
 
-LFLAGS = -L$(PWD)/ -L/usr/local/lib64 -L/usr/local/opt/readline/lib
+LFLAGS = -L$(PWD)/ -L/usr/local/lib64 -L/usr/local/opt/readline/lib -L/usr/local/lib
 
 # define any libraries to link into executable:
 #   if I want to link in libraries (libx.so or libx.a) I use the -llibname 
