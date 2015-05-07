@@ -62,16 +62,14 @@ void * text_thread(void *data) {
 }
 
 void * file_thread(void *user_data) {
-	GMainContext *main_context;
-	main_context = g_main_context_new();
-	g_main_context_push_thread_default(main_context);
-	init();
+//	GMainContext *main_context;
+//	main_context = g_main_context_new();
+//	g_main_context_push_thread_default(main_context);
+	//init();
 	//negotiate sdp
 	negotiate();
 	if (getControllingState()) {
 		io_printfln("Waiting to be ready to send.....\n");
-	} else {
-		io_printfln("Waiting to be ready to read.....\n");
 	}
 
 	/*Wait for stream to be writeable*/
@@ -81,22 +79,17 @@ void * file_thread(void *user_data) {
 	g_mutex_unlock(&write_mutex);
 	if (getControllingState()) {
 		io_printfln("yeahhh I'm ready to send now\n");
-	} else {
-		io_printfln("yeahhh I'm ready to read now\n");
 	}
-
 	if (getControllingState()) {
 		write_thread_gsource_cb(output_stream, user_data);
-	} else {
-		read_thread_gsource_cb(input_stream, user_data);
 	}
 	g_mutex_lock(&thread_mutex);
 	thread_has_done = TRUE;
 	g_cond_signal(&thread_cond);
 	g_mutex_unlock(&thread_mutex);
 	deinit();
-	g_main_context_pop_thread_default(main_context);
-	g_main_context_unref(main_context);
+//	g_main_context_pop_thread_default(main_context);
+//	g_main_context_unref(main_context);
 	return NULL;
 }
 
@@ -154,14 +147,11 @@ void read_thread_gsource_cb(GInputStream *input_stream, gpointer user_data) {
 }
 
 gboolean write_stream_cb(GObject *pollable_stream, gpointer _user_data) {
-	GMainLoop *main_loop;
-	main_loop = _user_data;
 	GError *error = NULL;
 	gchar *buf = NULL;
 	gsize buf_len = 0;
 	gssize len;
 	while (sent_byte < total_byte) {
-		gsize len_file_read;
 		/* Generate a buffer to trasmit. */
 		//BUFFER_SIZE_CONSTANT_SMALL policy
 		/* For other strategies read test-send-recv*/
@@ -170,7 +160,7 @@ gboolean write_stream_cb(GObject *pollable_stream, gpointer _user_data) {
 		//malloc of the size real needed
 		buf = g_malloc(buf_len);
 		//no control on file read error
-		len_file_read = fread(buf, 1, buf_len, fileSend);
+		fread(buf, 1, buf_len, fileSend);
 
 		/* Try to transmit some data. */
 		len = g_pollable_output_stream_write_nonblocking(
@@ -187,14 +177,14 @@ gboolean write_stream_cb(GObject *pollable_stream, gpointer _user_data) {
 
 		/* Update the test’s buffer generation state machine. */
 		sent_byte += len;
-		printf("Sent %lu bytes of %lu bytes read \n", len, len_file_read);
+		io_printfln("Sent %lu bytes \n", len);
+		io_printfln("Sent %d\%\n",(int) (sent_byte*100/total_byte));
 		/* Termination time? */
 		if (sent_byte == total_byte) {
-			g_main_loop_quit(main_loop);
+			io_printfln("Sent completed");
 			return G_SOURCE_REMOVE;
 		}
 	}
-
 	return G_SOURCE_CONTINUE;
 }
 
@@ -216,7 +206,6 @@ void write_thread_gsource_cb(GOutputStream *output_stream, gpointer user_data) {
 	/* Run the main loop. */
 	g_main_loop_run(main_loop);
 
-	g_source_destroy(stream_source);
 	g_source_unref(stream_source);
 	g_main_loop_unref(main_loop);
 	g_main_context_unref(main_context);

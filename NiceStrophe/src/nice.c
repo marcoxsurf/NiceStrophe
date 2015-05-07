@@ -19,11 +19,11 @@
 
 
 #define N_STATE 4
-static const gchar *state_name[] = { "disconnected", "gathering", "connecting",
+const gchar *state_name[] = { "disconnected", "gathering", "connecting",
 		"connected", "ready", "failed" };
-static const char *acceptable[N_STATE] =
+const char *acceptable[N_STATE] =
 		{ "request", "accept", "denied", "end" };
-static const nice_acceptable_t acceptable_[N_STATE] = { NICE_AC_REQUEST,
+const nice_acceptable_t acceptable_[N_STATE] = { NICE_AC_REQUEST,
 		NICE_AC_ACCEPTED, NICE_AC_DENIED, NICE_AC_END };
 
 gchar *port_err = NULL;
@@ -286,22 +286,25 @@ void handleDeniedState() {
 }
 void handleAcceptedState() {
 	io_notification("Nice request has been accepted from %s", getOtherJid());
+	//negotiate sdp
+	negotiate();
 	setNiceStatus(NICE_ST_BUSIED);
 	io_notification("State changed to %s", getStatusName(getNiceStatus()));
 }
 void handleBusyedState() {
-
-	//todo iniziare qui la comunicazione
-	//creo il thread e rimane in attesa finchè non termina
-//	niceThread = g_thread_new("nice_action_thread", &text_thread, NULL);
-	execThread = spawn_thread("write/read thread", &file_thread, NULL);
-	g_mutex_lock(&thread_mutex);
-	while (!thread_has_done) {
-		g_cond_wait(&thread_cond, &thread_mutex);
+	if (getControllingState()) {
+		io_printfln("Waiting to be ready to send.....\n");
+		/*Wait for stream to be writeable*/
+		g_mutex_lock(&write_mutex);
+		while (!(stream_open && stream_ready))
+			g_cond_wait(&write_cond, &write_mutex);
+		g_mutex_unlock(&write_mutex);
+		io_printfln("yeahhh I'm ready to send now\n");
+		write_thread_gsource_cb(output_stream, NULL);
+		setNiceStatus(NICE_ST_ENDED);
+	}else{
+		usleep(1000*10);
 	}
-	g_mutex_unlock(&thread_mutex);
-	g_thread_join(execThread);
-	setNiceStatus(NICE_ST_ENDED);
 }
 void handleEndedState() {
 	io_notification("Nice trasmission has ended.");
@@ -371,6 +374,7 @@ void negotiate() {
 	g_mutex_unlock(&negotiate_mutex);
 	if (!prog_running) {
 		io_notification("Ending thread.");
+		setNiceStatus(NICE_ST_ENDED);
 		g_main_loop_quit(gloop);
 		return;
 	}
@@ -425,6 +429,27 @@ void cb_nice_recv(NiceAgent *agent, guint stream_id, guint component_id,
 		g_main_loop_quit(gloop);
 		return;
 	}
+	if (len == -1) {
+		return;
+	}
+	if (getControllingState() == 0) {
+		io_printfln("Arrived %d byte", len);
+		if (fileRecv) {
+			size_t writen = fwrite(buf, sizeof(char), len, fileRecv);
+			read_byte += writen;
+			io_printfln("RECEIVED FILE: buf size: %d , writen size: %lu", len,
+					writen);
+			if (read_byte == total_byte) {
+				//fine file
+				fclose(fileRecv);
+				io_printfln("File closed");
+				//change status to ended
+				setNiceStatus(NICE_ST_ENDED);
+			}
+		} else {
+			io_error("ERROR OPENING FILE\n");
+		}
+	}
 }
 
 void cb_new_selected_pair(NiceAgent *agent, guint stream_id, guint component_id,
@@ -451,10 +476,7 @@ void cb_reliable_transport_writable(NiceAgent *agent, guint stream_id,
 	}
 	if (getControllingState()) {
 		output_stream = g_io_stream_get_output_stream(io_stream);
-	} else {
-		input_stream = g_io_stream_get_input_stream(io_stream);
 	}
-
 }
 
 gboolean cb_timer(gpointer pointer) {
