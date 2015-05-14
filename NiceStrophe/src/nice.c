@@ -392,7 +392,7 @@ void cb_candidate_gathering_done(NiceAgent *agent, guint stream_id,
 
 void cb_component_state_changed(NiceAgent *agent, guint _stream_id,
 		guint component_id, guint state, gpointer user_data) {
-	printf("SIGNAL: state changed %d %d %s[%d]\n", _stream_id, component_id,
+	io_notification("SIGNAL: state changed %d %d %s[%d]\n", _stream_id, component_id,
 			state_name[state], state);
 	if (state == NICE_COMPONENT_STATE_READY) {
 		NiceCandidate *local, *remote;
@@ -401,10 +401,10 @@ void cb_component_state_changed(NiceAgent *agent, guint _stream_id,
 				&local, &remote)) {
 			gchar ipaddr[INET6_ADDRSTRLEN];
 			nice_address_to_string(&local->addr, ipaddr);
-			printf("\nNegotiation complete: ([%s]:%d,", ipaddr,
+			io_printfln("\nNegotiation complete: ([%s]:%d,", ipaddr,
 					nice_address_get_port(&local->addr));
 			nice_address_to_string(&remote->addr, ipaddr);
-			printf(" [%s]:%d)\n", ipaddr, nice_address_get_port(&remote->addr));
+			io_printfln(" [%s]:%d)\n", ipaddr, nice_address_get_port(&remote->addr));
 
 			/* Signal stream state. */
 			g_mutex_lock(&negotiate_mutex);
@@ -454,13 +454,13 @@ void cb_nice_recv(NiceAgent *agent, guint stream_id, guint component_id,
 
 void cb_new_selected_pair(NiceAgent *agent, guint stream_id, guint component_id,
 		gchar *lfoundation, gchar *rfoundation, gpointer user_data) {
-	printf("SIGNAL: selected pair %s %s\n", lfoundation, rfoundation);
+	io_notification("SIGNAL: selected pair %s %s\n", lfoundation, rfoundation);
 }
 
 void cb_reliable_transport_writable(NiceAgent *agent, guint stream_id,
 		guint component_id, gpointer user_data) {
 	if (!reliable) {
-		fprintf(stderr, "Errore chiamato rtw_cb quando non reliable");
+		io_error( "Errore chiamato rtw_cb quando non reliable");
 		return;
 	}
 	/* Signal writeability. */
@@ -471,7 +471,7 @@ void cb_reliable_transport_writable(NiceAgent *agent, guint stream_id,
 
 	io_stream = g_object_get_data(G_OBJECT(agent), "io-stream");
 	if (io_stream == NULL) {
-		fprintf(stderr, "Error null io_Stream");
+		io_error("Error null io_Stream");
 		return;
 	}
 	if (getControllingState()) {
@@ -480,8 +480,8 @@ void cb_reliable_transport_writable(NiceAgent *agent, guint stream_id,
 }
 
 gboolean cb_timer(gpointer pointer) {
-	fprintf(stderr, "test-thread:%s: %p\n", G_STRFUNC, pointer);
+	io_error("test-thread:%s: %p\n", G_STRFUNC, pointer);
 	/* note: should not be reached, abort */
-	fprintf(stderr, "ERROR: test has got stuck, aborting...\n");
+	io_error("ERROR: test has got stuck, aborting...\n");
 	exit(-1);
 }

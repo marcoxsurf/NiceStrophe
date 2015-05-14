@@ -113,9 +113,9 @@ gboolean read_stream_cb(GObject *pollable_stream, gpointer _user_data) {
 		g_free(buf);
 		return G_SOURCE_CONTINUE;
 	}
-	printf("Read %lu bytes \n", len);
+	io_printfln("Read %lu bytes \n", len);
 	g_assert_no_error(error);
-	printf("Arrived: %s\n", buf);
+	io_printfln("Arrived: %s\n", buf);
 	//TODO Save buf to file
 	read_byte += len;
 	/* Termination time? */
