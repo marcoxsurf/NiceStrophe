@@ -54,6 +54,11 @@ int main() {
 	printf("Type /help for assistance.\n");
 	//Eseguo il main_loop e il thread
 	prog_running=TRUE;
+//	nice_debug_enable (TRUE);
+
+//	g_setenv("NICE_DEBUG","nice",TRUE);
+//	g_setenv("G_MESSAGES_DEBUG","libnice",TRUE);
+
 	gthread_xmpp = spawn_thread("_thread_xmpp", &_thread_xmpp, NULL);
 	gthread_nice = spawn_thread("_thread_nice", &_thread_nice, NULL);
 	//esegue il loop fino a che non viene chiamato g_main_loop_quit

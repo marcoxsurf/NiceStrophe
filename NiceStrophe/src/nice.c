@@ -439,6 +439,7 @@ void cb_nice_recv(NiceAgent *agent, guint stream_id, guint component_id,
 			read_byte += writen;
 			io_printfln("RECEIVED FILE: buf size: %d , writen size: %lu", len,
 					writen);
+			io_printfln("Content is %s\n",buf);
 			if (read_byte == total_byte) {
 				//fine file
 				fclose(fileRecv);
