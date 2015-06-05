@@ -110,7 +110,7 @@ void setting_connection() {
 		g_object_set(agent, "stun-server-port", stun_port, NULL);
 	}
 	g_object_set(agent, "controlling-mode", getControllingState(), "upnp",
-	FALSE, NULL);
+	TRUE, NULL);
 	if (getControllingState()) {
 		//check file dim
 		stat(file_send, &sstr);
@@ -464,12 +464,6 @@ void cb_reliable_transport_writable(NiceAgent *agent, guint stream_id,
 		io_error( "Errore chiamato rtw_cb quando non reliable");
 		return;
 	}
-	/* Signal writeability. */
-	g_mutex_lock(&write_mutex);
-	stream_open = TRUE;
-	g_cond_broadcast(&write_cond);
-	g_mutex_unlock(&write_mutex);
-
 	io_stream = g_object_get_data(G_OBJECT(agent), "io-stream");
 	if (io_stream == NULL) {
 		io_error("Error null io_Stream");
@@ -478,6 +472,11 @@ void cb_reliable_transport_writable(NiceAgent *agent, guint stream_id,
 	if (getControllingState()) {
 		output_stream = g_io_stream_get_output_stream(io_stream);
 	}
+	/* Signal writeability. */
+	g_mutex_lock(&write_mutex);
+	stream_open = TRUE;
+	g_cond_broadcast(&write_cond);
+	g_mutex_unlock(&write_mutex);
 }
 
 gboolean cb_timer(gpointer pointer) {

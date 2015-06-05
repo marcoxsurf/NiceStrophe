@@ -177,11 +177,11 @@ gboolean write_stream_cb(GObject *pollable_stream, gpointer _user_data) {
 
 		/* Update the test’s buffer generation state machine. */
 		sent_byte += len;
-		io_printfln("Sent %lu bytes \n", len);
-		io_printfln("Sent %d\%\n",(int) (sent_byte*100/total_byte));
+		io_printfln("Sent %lu bytes ", len);
+		io_printfln("Sent %d\%",(int) (sent_byte*100/total_byte));
 		/* Termination time? */
 		if (sent_byte == total_byte) {
-			io_printfln("Sent completed");
+			io_printfln("Send completed");
 			return G_SOURCE_REMOVE;
 		}
 	}
