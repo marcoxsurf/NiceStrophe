@@ -1,5 +1,5 @@
 # NiceStrophe
-Suppost to create a library to NAT Traversal relaying on a XMPP Server to rendez-vousing clients
+A library to NAT Traversal relaying on a XMPP Server to rendez-vousing clients
 
 Needed library to compile and run the code
 - readline
